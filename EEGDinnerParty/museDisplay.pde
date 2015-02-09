@@ -21,10 +21,12 @@ Boolean uiDrawForeheadConnection = true;    // headset
 Boolean uiDebugMode = false;
 
 //-- don't change these
-static int uiHeight = 250;
-static int uiWidth = 450;
+static int uiHeight = 450;
+static int uiWidth = 900;
 
-class UI {
+static int uiBallHeight = 300;
+
+class MuseDisplay {
   float drawX = 0;
   float drawY = 0;
   int r = 255;
@@ -32,7 +34,7 @@ class UI {
   int b = 255;
   
   //-- color is a name, like "yellow", "red", "green", blue"
-  UI(int x, int y, String colorStr ) {
+  MuseDisplay(int x, int y, String colorStr ) {
     drawX = x;
     drawY = y;
     setColor(colorStr);
@@ -111,20 +113,43 @@ class UI {
     }  
   }
 
+  // converts long decimal, i.e. .231 to float
+  private String floatToPct(float n) {
+     int rn = round(n *100);
+     return str(rn) + "%";
+  }
   // Draws mellow life as relative position, index = inde into array of headset
   private void drawStress(MuseHeadset headset) {
      int  diameter = 25;
+     float stressX = drawX + 200;
+     float stressY = 50 + drawY  + uiBallHeight -  (float(uiBallHeight)*headset.concentration);
+     
      noStroke();
-     fill(255,0,0);
-     ellipse(drawX + 100, drawY + uiHeight - (float(uiHeight)*headset.concentration), diameter, diameter);  // Draw gray ellipse using CENTER mode
-  }
+     fill(139,0,0);
+    //ellipse(stressX, stressY, diameter, diameter);  // Draw gray ellipse using CENTER mode
+    triangle(stressX, stressY+10, stressX + 10, stressY -15, stressX + 20, stressY+10);  // Draw gray ellipse using CENTER mode
+
+
+     fill(200,200,200);
+      textSize(12);
+      
+      
+      text( floatToPct(headset.concentration),stressX + 30, stressY + 5);   
+ }
 
   // Draws mellow life as relative position, index = inde into array of headset
   void drawMellow(MuseHeadset headset) {
      int  diameter = 25;
+     float mellowX = drawX + 300;
+     float mellowY = 50 + drawY  + uiBallHeight -  (float(uiBallHeight)*headset.mellow);
+     
      noStroke();
-     fill(255,255,0);
-     ellipse(drawX + 100 + 50, drawY  + uiHeight -  (float(uiHeight)*headset.mellow), diameter, diameter);  // Draw gray ellipse using CENTER mode
+     fill(15,245,145);
+     ellipse(mellowX, mellowY, diameter, diameter);  // Draw gray ellipse using CENTER mode
+      
+      fill(200,200,200);
+      textSize(12);
+      text( floatToPct(headset.mellow),mellowX + 20, mellowY+ 5); 
   }
 
   // Draws battery life as relative position, index = inde into array of headset

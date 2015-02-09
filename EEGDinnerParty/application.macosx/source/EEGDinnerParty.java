@@ -27,12 +27,12 @@ public class EEGDinnerParty extends PApplet {
 
 
 MuseHeadset[] headsets;
-UI[] ui;
+MuseDisplay[] displays;
 
 int numDevices = 4;
 
 public void setup() {
-  size(1280,720);
+  size(1920,1080);
   frameRate(60);
 
   //-- init headsets
@@ -42,11 +42,11 @@ public void setup() {
     headsets[i] = new  MuseHeadset(portNum);
   }
   
-  ui = new UI[numDevices];
-  ui[0] = new UI( 100, 100, "red");
-  ui[1] = new UI( 600, 100, "green");
-  ui[2] = new UI( 100, 400, "blue");
-  ui[3] = new UI( 600, 400, "yellow");
+  displays = new MuseDisplay[numDevices];
+  displays[0] = new MuseDisplay( 50, 50, "red");
+  displays[1] = new MuseDisplay( 1000, 50, "green");
+  displays[2] = new MuseDisplay( 50, 550, "blue");
+  displays[3] = new MuseDisplay( 1000, 550, "yellow");
   
 }
 
@@ -55,7 +55,7 @@ public void draw() {
   ellipseMode(CENTER);  // Set ellipseMode to CENTER
   
   for( int i = 0; i < numDevices; i++ )
-    ui[i].draw(headsets[i]); 
+    displays[i].draw(headsets[i]); 
 }
 
 public void stop() {
@@ -101,83 +101,18 @@ public void keyPressed() {
  * Device name can be changed in SystemPrefs->Bluetooth
  */
  
-class MuseHeadset {
-  int port;
-  OscP5 osc;
-  
-  float mellow = 0.0f;
-  float concentration = 0.0f;
-  int touchingForehead = 0;
-  float batteryPct = -1.0f;    // NO READING
-  int[] good; // num sensors
-
-  MuseHeadset(int thePort) {
-    port = thePort;
-    osc = new OscP5(this,port);
-    good = new int[4];
-    float batteryPct;
-  }
- 
-  // incoming osc message are forwarded to the oscEvent method, private to this class
-  public void oscEvent(OscMessage theOscMessage) {
-    /* print the address pattern and the typetag of the received OscMessage */
-    //print("### received an osc message.");
-    String addrPattern = theOscMessage.addrPattern();
-    //print (addrPattern);
-    if (addrPattern.equals("/muse/elements/experimental/concentration") ) {
-      concentration = theOscMessage.get(0).floatValue() ;
-       //print ("CONCENTRATION: " + str(concentration) + "\n");
-    }
-    else if( addrPattern.equals("/muse/elements/experimental/mellow") ) {
-      mellow = theOscMessage.get(0).floatValue();
-      //print ("MELLOW: " + str(mellow) + "\n");
-    }
-    else if(  addrPattern.equals("/muse/elements/touching_forehead") ) {
-      //println("touching forehead typetag: "+ theOscMessage.typetag());
-      touchingForehead = theOscMessage.get(0).intValue();
-    }  
-    else if( addrPattern.equals("/muse/elements/is_good") ) {
-      //println("touching forehead typetag: "+ theOscMessage.typetag());
-      for(int i = 0; i <4;i++ ) {
-        good[i] = theOscMessage.get(i).intValue();
-      }
-    }  
-    else if( addrPattern.equals("/muse/batt")) {
-        // State of Charge, Divide this by 100 to get percentage of charge remaining, (e.g. 5367 is 53.67%)
-       batteryPct = PApplet.parseFloat(theOscMessage.get(0).intValue()) / 100.0f;
-        println(batteryPct);
-   }
-  }
-  
-
-}
-/**
- * MuseHeadset Class
- * Written by Scott Kildall
- * March 2014
- * 
- * Designed for use with multiple Muse headsets, will listen to OSC events
- * Headset should be hooked up to the same computer, network connections can be turned off.
- *
- * In Terminal Windows, type in, something like:
- * muse-io --preset 14 --device muse --osc osc.udp://localhost:5000
- * And in Processing, instatiate it such as:
- *    new  MyOSCListener(5000);
- *
- * Each headset needs its own unique port number and device name.
- * Device name can be changed in SystemPrefs->Bluetooth
- */
- 
 //-- change these
 Boolean uiDrawBattery = false;
 Boolean uiDrawForeheadConnection = true;    // headset
 Boolean uiDebugMode = false;
 
 //-- don't change these
-static int uiHeight = 250;
-static int uiWidth = 450;
+static int uiHeight = 450;
+static int uiWidth = 900;
 
-class UI {
+static int uiBallHeight = 300;
+
+class MuseDisplay {
   float drawX = 0;
   float drawY = 0;
   int r = 255;
@@ -185,7 +120,7 @@ class UI {
   int b = 255;
   
   //-- color is a name, like "yellow", "red", "green", blue"
-  UI(int x, int y, String colorStr ) {
+  MuseDisplay(int x, int y, String colorStr ) {
     drawX = x;
     drawY = y;
     setColor(colorStr);
@@ -264,20 +199,43 @@ class UI {
     }  
   }
 
+  // converts long decimal, i.e. .231 to float
+  private String floatToPct(float n) {
+     int rn = round(n *100);
+     return str(rn) + "%";
+  }
   // Draws mellow life as relative position, index = inde into array of headset
   private void drawStress(MuseHeadset headset) {
      int  diameter = 25;
+     float stressX = drawX + 200;
+     float stressY = 50 + drawY  + uiBallHeight -  (PApplet.parseFloat(uiBallHeight)*headset.concentration);
+     
      noStroke();
-     fill(255,0,0);
-     ellipse(drawX + 100, drawY + uiHeight - (PApplet.parseFloat(uiHeight)*headset.concentration), diameter, diameter);  // Draw gray ellipse using CENTER mode
-  }
+     fill(139,0,0);
+    //ellipse(stressX, stressY, diameter, diameter);  // Draw gray ellipse using CENTER mode
+    triangle(stressX, stressY+10, stressX + 10, stressY -15, stressX + 20, stressY+10);  // Draw gray ellipse using CENTER mode
+
+
+     fill(200,200,200);
+      textSize(12);
+      
+      
+      text( floatToPct(headset.concentration),stressX + 30, stressY + 5);   
+ }
 
   // Draws mellow life as relative position, index = inde into array of headset
   public void drawMellow(MuseHeadset headset) {
      int  diameter = 25;
+     float mellowX = drawX + 300;
+     float mellowY = 50 + drawY  + uiBallHeight -  (PApplet.parseFloat(uiBallHeight)*headset.mellow);
+     
      noStroke();
-     fill(255,255,0);
-     ellipse(drawX + 100 + 50, drawY  + uiHeight -  (PApplet.parseFloat(uiHeight)*headset.mellow), diameter, diameter);  // Draw gray ellipse using CENTER mode
+     fill(15,245,145);
+     ellipse(mellowX, mellowY, diameter, diameter);  // Draw gray ellipse using CENTER mode
+      
+      fill(200,200,200);
+      textSize(12);
+      text( floatToPct(headset.mellow),mellowX + 20, mellowY+ 5); 
   }
 
   // Draws battery life as relative position, index = inde into array of headset
@@ -290,8 +248,75 @@ class UI {
      text( batteryStr, drawX + uiWidth - 70, drawY + 30); 
   }
 }
+/**
+ * MuseHeadset Class
+ * Written by Scott Kildall
+ * March 2014
+ * 
+ * Designed for use with multiple Muse headsets, will listen to OSC events
+ * Headset should be hooked up to the same computer, network connections can be turned off.
+ *
+ * In Terminal Windows, type in, something like:
+ * muse-io --preset 14 --device muse --osc osc.udp://localhost:5000
+ * And in Processing, instatiate it such as:
+ *    new  MyOSCListener(5000);
+ *
+ * Each headset needs its own unique port number and device name.
+ * Device name can be changed in SystemPrefs->Bluetooth
+ */
+ 
+class MuseHeadset {
+  int port;
+  OscP5 osc;
+  
+  float mellow = 0.0f;
+  float concentration = 0.0f;
+  int touchingForehead = 0;
+  float batteryPct = -1.0f;    // NO READING
+  int[] good; // num sensors
+
+  MuseHeadset(int thePort) {
+    port = thePort;
+    osc = new OscP5(this,port);
+    good = new int[4];
+    float batteryPct;
+  }
+ 
+  // incoming osc message are forwarded to the oscEvent method, private to this class
+  public void oscEvent(OscMessage theOscMessage) {
+    /* print the address pattern and the typetag of the received OscMessage */
+    //print("### received an osc message.");
+    String addrPattern = theOscMessage.addrPattern();
+    //print (addrPattern);
+    if (addrPattern.equals("/muse/elements/experimental/concentration") ) {
+      concentration = theOscMessage.get(0).floatValue() ;
+       //print ("CONCENTRATION: " + str(concentration) + "\n");
+    }
+    else if( addrPattern.equals("/muse/elements/experimental/mellow") ) {
+      mellow = theOscMessage.get(0).floatValue();
+      //print ("MELLOW: " + str(mellow) + "\n");
+    }
+    else if(  addrPattern.equals("/muse/elements/touching_forehead") ) {
+      //println("touching forehead typetag: "+ theOscMessage.typetag());
+      touchingForehead = theOscMessage.get(0).intValue();
+    }  
+    else if( addrPattern.equals("/muse/elements/is_good") ) {
+      //println("touching forehead typetag: "+ theOscMessage.typetag());
+      for(int i = 0; i <4;i++ ) {
+        good[i] = theOscMessage.get(i).intValue();
+      }
+    }  
+    else if( addrPattern.equals("/muse/batt")) {
+        // State of Charge, Divide this by 100 to get percentage of charge remaining, (e.g. 5367 is 53.67%)
+       batteryPct = PApplet.parseFloat(theOscMessage.get(0).intValue()) / 100.0f;
+        println(batteryPct);
+   }
+  }
+  
+
+}
   static public void main(String[] passedArgs) {
-    String[] appletArgs = new String[] { "--full-screen", "--bgcolor=#666666", "--hide-stop", "EEGDinnerParty" };
+    String[] appletArgs = new String[] { "--full-screen", "--bgcolor=#050505", "--hide-stop", "EEGDinnerParty" };
     if (passedArgs != null) {
       PApplet.main(concat(appletArgs, passedArgs));
     } else {

@@ -8,12 +8,12 @@ import oscP5.*;
 import netP5.*;
 
 MuseHeadset[] headsets;
-UI[] ui;
+MuseDisplay[] displays;
 
 int numDevices = 4;
 
 void setup() {
-  size(1280,720);
+  size(1920,1080);
   frameRate(60);
 
   //-- init headsets
@@ -23,11 +23,11 @@ void setup() {
     headsets[i] = new  MuseHeadset(portNum);
   }
   
-  ui = new UI[numDevices];
-  ui[0] = new UI( 100, 100, "red");
-  ui[1] = new UI( 600, 100, "green");
-  ui[2] = new UI( 100, 400, "blue");
-  ui[3] = new UI( 600, 400, "yellow");
+  displays = new MuseDisplay[numDevices];
+  displays[0] = new MuseDisplay( 50, 50, "red");
+  displays[1] = new MuseDisplay( 1000, 50, "green");
+  displays[2] = new MuseDisplay( 50, 550, "blue");
+  displays[3] = new MuseDisplay( 1000, 550, "yellow");
   
 }
 
@@ -36,7 +36,7 @@ void draw() {
   ellipseMode(CENTER);  // Set ellipseMode to CENTER
   
   for( int i = 0; i < numDevices; i++ )
-    ui[i].draw(headsets[i]); 
+    displays[i].draw(headsets[i]); 
 }
 
 void stop() {
