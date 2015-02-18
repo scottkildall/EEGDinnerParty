@@ -79,8 +79,13 @@ class MuseDisplay {
       drawGoodConnection(headset);
   }
   
-    drawStress(headset);
-    drawMellow(headset);
+    //drawAlpha(headset);
+    
+    drawBeta(headset);
+    //drawDelta(headset);
+    //drawGamma(headset);
+    drawTheta(headset);
+    
     if (uiDrawBattery)
       drawBatteryLife(headset);
 }
@@ -118,38 +123,72 @@ class MuseDisplay {
      int rn = round(n *100);
      return str(rn) + "%";
   }
-  // Draws mellow life as relative position, index = inde into array of headset
-  private void drawStress(MuseHeadset headset) {
-     int  diameter = 25;
-     float stressX = drawX + 200;
-     float stressY = 50 + drawY  + uiBallHeight -  (float(uiBallHeight)*headset.concentration);
+  
+   void drawBeta(MuseHeadset headset) {
+     int  base = 10;
+     float betaX = drawX + 400;
+     float betaY = 50 + drawY  + uiBallHeight;    // we will subtact from this:  -(float(uiBallHeight)*thetaRelative[i].mellow);
      
      noStroke();
-     fill(139,0,0);
-    //ellipse(stressX, stressY, diameter, diameter);  // Draw gray ellipse using CENTER mode
-    triangle(stressX, stressY+10, stressX + 10, stressY -15, stressX + 20, stressY+10);  // Draw gray ellipse using CENTER mode
-
-
-     fill(200,200,200);
-      textSize(12);
-      
-      
-      text( floatToPct(headset.concentration),stressX + 30, stressY + 5);   
- }
-
-  // Draws mellow life as relative position, index = inde into array of headset
-  void drawMellow(MuseHeadset headset) {
-     int  diameter = 25;
-     float mellowX = drawX + 300;
-     float mellowY = 50 + drawY  + uiBallHeight -  (float(uiBallHeight)*headset.mellow);
+     fill(240,0,0);
      
-     noStroke();
-     fill(15,245,145);
-     ellipse(mellowX, mellowY, diameter, diameter);  // Draw gray ellipse using CENTER mode
-      
+     float lastX = 0;
+     float lastY = 0;
+     
+     stroke(240,0,0);
+     strokeWeight(1);
+     
+     for( int i = 0; i < 4; i++ ) {
+       float bx = betaX + (i * (base*2));
+       float by = betaY - (float(uiBallHeight/2)*(headset.betaRelative[i]/2));
+       triangle(bx, by+base/2, bx + base/2, by - (base/2 + base), bx + base, by+base/2);  // Draw gray ellipse using CENTER mode
+  
+       if( i > 0 ) {
+        line(lastX,lastY, bx, by);
+        
+        }
+        lastX = bx;
+        lastY = by;
+     }
+     
       fill(200,200,200);
       textSize(12);
-      text( floatToPct(headset.mellow),mellowX + 20, mellowY+ 5); 
+      //text( floatToPct(headset.mellow),mellowX + 20, mellowY+ 5); 
+  }
+  
+ 
+
+  // Draws mellow life as relative position, index = inde into array of headset
+  void drawTheta(MuseHeadset headset) {
+     int  diameter = 10;
+     float thetaX = drawX + 300;
+     float thetaY = 50 + drawY  + uiBallHeight;    // we will subtact from this:  -(float(uiBallHeight)*thetaRelative[i].mellow);
+     
+     stroke(15,245,145);
+     strokeWeight(1);
+     
+     fill(15,245,145);
+     
+     
+     float lastX = 0;
+     float lastY = 0;
+     
+     for( int i = 0; i < 4; i++ ) { 
+       float tx = thetaX + (i * (diameter*2));
+       float ty = thetaY - (float(uiBallHeight/2)*(headset.thetaRelative[i]/2));
+       ellipse(tx, ty, diameter, diameter);  // Draw gray ellipse using CENTER mode
+       
+        if( i > 0 ) {
+        line(lastX,lastY, tx, ty);
+        }
+        lastX = tx;
+        lastY = ty;
+        
+     }
+     
+      fill(200,200,200);
+      textSize(12);
+      //text( floatToPct(headset.mellow),mellowX + 20, mellowY+ 5); 
   }
 
   // Draws battery life as relative position, index = inde into array of headset

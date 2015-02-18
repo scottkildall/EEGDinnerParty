@@ -1,4 +1,4 @@
-/**
+ /**
  * MuseHeadset Class
  * Written by Scott Kildall
  * March 2014
@@ -19,32 +19,38 @@ class MuseHeadset {
   int port;
   OscP5 osc;
   
-  float mellow = 0.0;
-  float concentration = 0.0;
   int touchingForehead = 0;
   float batteryPct = -1.0;    // NO READING
   int[] good; // num sensors
-
+  
+  float [] betaRelative;
+  float [] thetaRelative;
+  
   MuseHeadset(int thePort) {
     port = thePort;
     osc = new OscP5(this,port);
     good = new int[4];
+    betaRelative = new float[4];
+    thetaRelative = new float[4];
+    
     float batteryPct;
   }
  
   // incoming osc message are forwarded to the oscEvent method, private to this class
   void oscEvent(OscMessage theOscMessage) {
+    //print(theOscMessage);
+    
     /* print the address pattern and the typetag of the received OscMessage */
     //print("### received an osc message.");
     String addrPattern = theOscMessage.addrPattern();
     //print (addrPattern);
-    if (addrPattern.equals("/muse/elements/experimental/concentration") ) {
-      concentration = theOscMessage.get(0).floatValue() ;
-       //print ("CONCENTRATION: " + str(concentration) + "\n");
+    if( addrPattern.equals("/muse/elements/beta_absolute") ) {
+      for( int i = 0; i < 4; i++ ) 
+        betaRelative[i] = theOscMessage.get(i).floatValue();
     }
-    else if( addrPattern.equals("/muse/elements/experimental/mellow") ) {
-      mellow = theOscMessage.get(0).floatValue();
-      //print ("MELLOW: " + str(mellow) + "\n");
+    else if( addrPattern.equals("/muse/elements/theta_absolute") ) {
+      for( int i = 0; i < 4; i++ ) 
+        thetaRelative[i] = theOscMessage.get(i).floatValue();
     }
     else if(  addrPattern.equals("/muse/elements/touching_forehead") ) {
       //println("touching forehead typetag: "+ theOscMessage.typetag());
@@ -61,6 +67,9 @@ class MuseHeadset {
        batteryPct = float(theOscMessage.get(0).intValue()) / 100.0;
         println(batteryPct);
    }
+   else if( addrPattern.equals("/test")) 
+     println("TEST @ Port: " + str(port));
+      //println( "message = " + str(theOscMessage.get(0).intValue()));
   }
   
 
