@@ -45,12 +45,19 @@ class MuseHeadset {
     String addrPattern = theOscMessage.addrPattern();
     //print (addrPattern);
     if( addrPattern.equals("/muse/elements/beta_absolute") ) {
-      for( int i = 0; i < 4; i++ ) 
+      println( "BETA ABS");
+      
+      for( int i = 0; i < 4; i++ ) {
         betaRelative[i] = theOscMessage.get(i).floatValue();
+        println(betaRelative[i]);
+      }
     }
     else if( addrPattern.equals("/muse/elements/theta_absolute") ) {
-      for( int i = 0; i < 4; i++ ) 
+      println( "THETA ABS");
+      for( int i = 0; i < 4; i++ ) {
         thetaRelative[i] = theOscMessage.get(i).floatValue();
+       println(thetaRelative[i]); 
+      }
     }
     else if(  addrPattern.equals("/muse/elements/touching_forehead") ) {
       //println("touching forehead typetag: "+ theOscMessage.typetag());
@@ -65,7 +72,7 @@ class MuseHeadset {
     else if( addrPattern.equals("/muse/batt")) {
         // State of Charge, Divide this by 100 to get percentage of charge remaining, (e.g. 5367 is 53.67%)
        batteryPct = float(theOscMessage.get(0).intValue()) / 100.0;
-        println(batteryPct);
+        //println(batteryPct);
    }
    else if( addrPattern.equals("/test")) 
      println("TEST @ Port: " + str(port));
