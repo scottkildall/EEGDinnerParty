@@ -19,46 +19,108 @@ class MuseHeadset {
   int port;
   OscP5 osc;
   
-  int touchingForehead = 0;
-  float batteryPct = -1.0;    // NO READING
-  int[] good; // num sensors
+  //int touchingForehead = 0;
+  //float batteryPct = -1.0;    // NO READING
+  //int[] good; // num sensors
   
-  float [] betaRelative;
-  float [] thetaRelative;
+  // These are "absolute" rather than relative values
+  float [] alpha;
+  float [] beta;
+  float [] delta;
+  float [] gamma;
+  float [] theta;
+  float [] horseshoeValues;
+  String [] horseshoeStrings;
+  
+  int lastPacketTime;
   
   MuseHeadset(int thePort) {
     port = thePort;
     osc = new OscP5(this,port);
-    good = new int[4];
-    betaRelative = new float[4];
-    thetaRelative = new float[4];
     
-    float batteryPct;
+    //good = new int[4];
+    alpha = new float[4];
+    beta = new float[4];
+    delta = new float[4];
+    gamma = new float[4];
+    theta = new float[4];
+    horseshoeValues = new float[4];
+    horseshoeStrings = new String[4];
+    for( int i = 0; i < 4; i++ )
+      horseshoeValues[i] = -1;    // not yet being used
+      
+    generateHorseShoeStrings();
+    
+    lastPacketTime = millis();
   }
- 
+   
+  void generateHorseShoeStrings() {
+    for( int i = 0; i < 4; i++ ) {
+      if( horseshoeValues[i] == 4.0 )
+        horseshoeStrings[i] = new String("none");
+      else if( horseshoeValues[i] == 3.0 )
+        horseshoeStrings[i] = new String("bad");
+      else if( horseshoeValues[i] == 2.0 )
+        horseshoeStrings[i] = new String("ok");
+      else if( horseshoeValues[i] == 1.0 )
+        horseshoeStrings[i] = new String("good");
+       else
+        horseshoeStrings[i] = new String("N/A");
+    }
+  }
+  
   // incoming osc message are forwarded to the oscEvent method, private to this class
   void oscEvent(OscMessage theOscMessage) {
-    //print(theOscMessage);
-    
-    /* print the address pattern and the typetag of the received OscMessage */
-    //print("### received an osc message.");
-    String addrPattern = theOscMessage.addrPattern();
+    // Uncomment for "raw" debugging"
     //print (addrPattern);
+    
+    String addrPattern = theOscMessage.addrPattern();
+    
+    // ALPHA (ABSOLUTE)
+    if( addrPattern.equals("/muse/elements/alpha_absolute") ) {
+      for( int i = 0; i < 4; i++ ) {
+        alpha[i] = theOscMessage.get(i).floatValue();
+      }
+    }
+    
+    // BETA (ABSOLUTE)
     if( addrPattern.equals("/muse/elements/beta_absolute") ) {
-      println( "BETA ABS");
-      
       for( int i = 0; i < 4; i++ ) {
-        betaRelative[i] = theOscMessage.get(i).floatValue();
-        println(betaRelative[i]);
+        beta[i] = theOscMessage.get(i).floatValue();
       }
     }
-    else if( addrPattern.equals("/muse/elements/theta_absolute") ) {
-      println( "THETA ABS");
+   
+   // DELTA (ABSOLUTE)
+    if( addrPattern.equals("/muse/elements/delta_absolute") ) {
       for( int i = 0; i < 4; i++ ) {
-        thetaRelative[i] = theOscMessage.get(i).floatValue();
-       println(thetaRelative[i]); 
+        delta[i] = theOscMessage.get(i).floatValue();
       }
     }
+    
+    // GAMMA (ABSOLUTE)
+    if( addrPattern.equals("/muse/elements/gamma_absolute") ) {
+      for( int i = 0; i < 4; i++ ) {
+        gamma[i] = theOscMessage.get(i).floatValue();
+      }
+    }
+    
+    // THETA (ABSOLUTE)
+    if( addrPattern.equals("/muse/elements/theta_absolute") ) {
+      for( int i = 0; i < 4; i++ ) {
+        theta[i] = theOscMessage.get(i).floatValue();
+      }
+    }
+    
+    // HORSESHOE
+    if( addrPattern.equals("/muse/elements/horseshoe") ) {
+      for( int i = 0; i < 4; i++ ) {
+        horseshoeValues[i] = theOscMessage.get(i).floatValue();
+      }
+      generateHorseShoeStrings();
+    }
+    
+    ///REMOVE (LATER)
+    /*
     else if(  addrPattern.equals("/muse/elements/touching_forehead") ) {
       //println("touching forehead typetag: "+ theOscMessage.typetag());
       touchingForehead = theOscMessage.get(0).intValue();
@@ -74,10 +136,17 @@ class MuseHeadset {
        batteryPct = float(theOscMessage.get(0).intValue()) / 100.0;
         //println(batteryPct);
    }
-   else if( addrPattern.equals("/test")) 
+   else if( addrPattern.equals("/test"))  {
      println("TEST @ Port: " + str(port));
       //println( "message = " + str(theOscMessage.get(0).intValue()));
+      
+   }
+   */
+   // last communication, whatever it might be
+   lastPacketTime = millis();
   }
+  
+  
   
 
 }

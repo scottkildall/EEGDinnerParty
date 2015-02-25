@@ -3,8 +3,6 @@
 //  Class: Timer
 //
 //  Written by Scott Kildall
-//  Exploratorium
-//  December 2012
 //
 //------------------------------------------------------------------------------------------------------------------
 // - Very simple but incredibly useful timer class
