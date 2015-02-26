@@ -18,7 +18,6 @@
 //-- change these
 Boolean uiDrawBattery = false;
 Boolean uiDrawForeheadConnection = true;    // headset
-Boolean uiDebugMode = false;
 
 //-- don't change these
 static int uiHeight = 450;
@@ -26,7 +25,7 @@ static int uiWidth = 900;
 
 static int uiBallHeight = 300;
 
-class MuseDisplay {
+class DebugHeadsetDisplay {
   float drawX = 0;
   float drawY = 0;
   int r = 255;
@@ -42,7 +41,7 @@ class MuseDisplay {
   float [] waveData;
   
   //-- color is a name, like "yellow", "red", "green", blue"
-  MuseDisplay(int x, int y, String colorStr ) {
+  DebugHeadsetDisplay(int x, int y, String colorStr ) {
     drawX = x;
     drawY = y;
     setColor(colorStr);
@@ -62,10 +61,7 @@ class MuseDisplay {
     drawWaveBalls(prepareDrawDelta(headset));
     drawWaveBalls(prepareDrawGamma(headset));
     drawWaveBalls(prepareDrawTheta(headset));
-<<<<<<< HEAD
     drawHorseshoe(headset);
-=======
->>>>>>> FETCH_HEAD
     
 //    if (uiDrawBattery)
 //      drawBatteryLife(headset);
@@ -151,8 +147,6 @@ class MuseDisplay {
     fill(0,200,200);
     stroke(0,200,200);
     strokeWeight(1);
-<<<<<<< HEAD
-=======
      
     waveData[0] = headset.alpha[0];
     waveData[1] = headset.alpha[1];
@@ -234,107 +228,6 @@ class MuseDisplay {
         
         lastX = tx;
         lastY = ty;
-     }
-  }
-  /*
-   void drawBeta(MuseHeadset headset) {
-     int  base = 10;
-     float betaY = 50 + drawY  + uiBallHeight;    // we will subtact from this:  -(float(uiBallHeight)*thetaRelative[i].mellow);
->>>>>>> FETCH_HEAD
-     
-    waveData[0] = headset.alpha[0];
-    waveData[1] = headset.alpha[1];
-    waveData[2] = headset.alpha[2];
-    waveData[3] = headset.alpha[3];
-    
-    return drawX + alphaX;
-  }
-  
-  float prepareDrawBeta(MuseHeadset headset) {
-    fill(200,0,0);
-    stroke(200,0,0);
-    strokeWeight(1);
-     
-    waveData[0] = headset.beta[0];
-    waveData[1] = headset.beta[1];
-    waveData[2] = headset.beta[2];
-    waveData[3] = headset.beta[3];
-    
-    return drawX + betaX;
-  }
-  
-  float prepareDrawDelta(MuseHeadset headset) {
-    fill(0,200,0);
-    stroke(0,200,0);
-    strokeWeight(1);
-     
-    waveData[0] = headset.delta[0];
-    waveData[1] = headset.delta[1];
-    waveData[2] = headset.delta[2];
-    waveData[3] = headset.delta[3];
-    
-    return drawX + deltaX;
-  }
-  
-  float prepareDrawGamma(MuseHeadset headset) {
-    fill(0,0,200);
-    stroke(0,0,200);
-    strokeWeight(1);
-     
-<<<<<<< HEAD
-    waveData[0] = headset.gamma[0];
-    waveData[1] = headset.gamma[1];
-    waveData[2] = headset.gamma[2];
-    waveData[3] = headset.gamma[3];
-    
-    return drawX + gammaX;
-  }
-  
-  float prepareDrawTheta(MuseHeadset headset) {
-    fill(200,0,200);
-    stroke(200,0,200);
-    strokeWeight(1);
-     
-    waveData[0] = headset.theta[0];
-    waveData[1] = headset.theta[1];
-    waveData[2] = headset.theta[2];
-    waveData[3] = headset.theta[3];
-    
-    return drawX + thetaX;
-  }
-  
-  // fill(r,g,b) should be called beforehand
-  // startX = alphaX, betaX, etc
-  // values[] should be an array of 4 elements, each such as headset.betaRelative, etc
-  void drawWaveBalls(float startX) {
-     int  diameter = 10;
-     float dy = 50 + drawY  + uiBallHeight;    // we will subtact from this:  -(float(uiBallHeight)*thetaRelative[i].mellow);
-     
-     float lastX = 0;
-     float lastY = 0;
-     
-     for( int i = 0; i < 4; i++ ) { 
-       float tx = startX + (i * (diameter*2));
-       float ty = dy - (float(uiBallHeight/2)*(waveData[i]/2));
-       ellipse(tx, ty, diameter, diameter);  // Draw gray ellipse using CENTER mode
-       
-       if( i > 0 )
-         line(lastX,lastY, tx, ty);
-        
-        lastX = tx;
-        lastY = ty;
-=======
-     for( int i = 0; i < 4; i++ ) {
-       float bx = drawX + betaX + (i * (base*2));
-       float by = betaY - (float(uiBallHeight/2)*(headset.betaRelative[i]/2));
-       triangle(bx, by+base/2, bx + base/2, by - (base/2 + base), bx + base, by+base/2);  // Draw gray ellipse using CENTER mode
-  
-       if( i > 0 ) {
-        line(lastX,lastY, bx, by);
-        }
-        lastX = bx;
-        lastY = by;
->>>>>>> FETCH_HEAD
      }
   }
   

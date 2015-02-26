@@ -32,6 +32,13 @@ class MuseHeadset {
   float [] horseshoeValues;
   String [] horseshoeStrings;
   
+  // quantization
+  float qAlpha;
+  float qBeta;
+  float qDelta;
+  float qGamma;
+  float qTheta;
+  
   int lastPacketTime;
   
   MuseHeadset(int thePort) {
@@ -51,9 +58,28 @@ class MuseHeadset {
       
     generateHorseShoeStrings();
     
+    zeroQWaveValues();
+    
     lastPacketTime = millis();
   }
+  
+  void zeroQWaveValues() {
+      qAlpha = 0.0;
+      qBeta = 0.0;
+      qDelta = 0.0;
+      qGamma = 0.0;
+      qTheta = 0.0;
+  }
+  
+  //-- based on horseshoe settings, will generate average qQave values
+  float generateQWaveValue(float [] waveValues) {
    
+    for( int i = 0; i < 4; i++ ) {
+       // generate qValue here 
+    }
+   
+   return 0.0;
+  }
   void generateHorseShoeStrings() {
     for( int i = 0; i < 4; i++ ) {
       if( horseshoeValues[i] == 4.0 )
@@ -81,6 +107,7 @@ class MuseHeadset {
       for( int i = 0; i < 4; i++ ) {
         alpha[i] = theOscMessage.get(i).floatValue();
       }
+      qAlpha = generateQWaveValue(alpha);
     }
     
     // BETA (ABSOLUTE)
@@ -145,8 +172,4 @@ class MuseHeadset {
    // last communication, whatever it might be
    lastPacketTime = millis();
   }
-  
-  
-  
-
 }
