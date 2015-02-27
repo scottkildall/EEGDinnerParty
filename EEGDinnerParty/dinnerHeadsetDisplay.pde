@@ -36,6 +36,11 @@ class DinnerHeadsetDisplay {
     
   }
   
+  public void setFillColor() {
+    fill(r,g,b);
+    stroke(r,g,b);  
+  }
+  
   //-- draw 
   public void draw(MuseHeadset headset) {
     drawGraph();

@@ -27,6 +27,7 @@ class Plotter {
   
   // more drawing code
   float vLabelsOffset;  // how much space between each line or for text
+  float vPlotMultiplier;  // how much we mutliply each data point by to match our vertical plot
   String [] vLabels;      // vertical labels, for BBQ Affinity
   
   float hLabelsOffset;  // how much horziontal space
@@ -37,7 +38,7 @@ class Plotter {
   PFont axesNumbersFont;
   
   //-- alloc this
-  //-- float [][] plotData;
+  float [][] plotData;
   //-- constructor, mostly empty
   Plotter(MuseHeadset [] _headsets, float _drawX, float _drawY) {
       headsets = _headsets;
@@ -68,8 +69,14 @@ class Plotter {
     
     // VARIABLES FOR WIDTH / HORIZONTAL
     numPixels = (int)_w - 20;  // number of pixels is actually slightly less than the width
+    println("num pixels = " + str(numPixels) );
+    
     w = _w;
     numTimeIncrements = _numTimeIncrements;
+    
+    // Allocate receptors for pixels
+    plotData = new float[numHeadsets][numPixels];
+    numPlottedPixels = 0;
     
     //-- how much space between each horizontal line, used in drawAxes()
     hLabelsOffset = (float)numPixels/(float)(numTimeIncrements);
@@ -78,36 +85,34 @@ class Plotter {
     numMinutes = _numMinutes;
     hLabels = new String[numTimeIncrements+1];
     float incrementValue = numMinutes/numTimeIncrements;
-    println( "H plotter: increment value = " + str(incrementValue) );
+    //println( "H plotter: increment value = " + str(incrementValue) );
     for( int i = 0; i < (numTimeIncrements+1); i++ ) {
       float fpLabel = 0.0f + (i*incrementValue);
       hLabels[i] = String.format("%.1f",fpLabel);
       
+      // trim off extra ".0"
       int len = hLabels[i].length();
-      println( "len = " + str(len) );
-      
       if( len > 1  ) {
         String tailStr = hLabels[i].substring(len-2,len);
-        if(tailStr.equals(".0")) {
+        if(tailStr.equals(".0"))
           hLabels[i] = hLabels[i].substring(0,len-2);
-          println( hLabels[i]);  
-        }
       }
        
-      println( "plotter: string label = " + hLabels[i] );
+      //println( "plotter: string label = " + hLabels[i] );
     }
     
     // VARIABLES FOR HEIGHT / VERTICAL
     h = _h;
     numHeightIncrements = _numHeightIncrements;
+    vPlotMultiplier = h/100.0f;
     
     //-- how much space between each horizontal line, used in drawAxes()
     vLabelsOffset = h/(float)(numHeightIncrements);
     vLabels = new String[numHeightIncrements+1];
     int incrValue = 100/numHeightIncrements;
-    println( "V plotter: vLabelsOffset = " + str(vLabelsOffset) );
-    println( "V plotter: height = " + str(h) );
-    println( "V plotter: increment value = " + str(incrementValue) );
+//    println( "V plotter: vLabelsOffset = " + str(vLabelsOffset) );
+//    println( "V plotter: height = " + str(h) );
+//    println( "V plotter: increment value = " + str(incrementValue) );
     for( int i = 0; i < (numHeightIncrements+1); i++ ) {
       int intLabel = 100 - (i*incrValue);
       vLabels[i] = str(intLabel);
@@ -120,7 +125,8 @@ class Plotter {
     
     plotTimer = new Timer(duration);
     
-    long pixelTimerDuration = duration/numPixels;
+    long pixelTimerDuration = duration/numPixels+1;
+    println( "duration = " + str(duration) );
     println( "plotter.pixelTimerDuration = " + str(pixelTimerDuration) );
     
     pixelTimer = new Timer(pixelTimerDuration);
@@ -142,6 +148,7 @@ class Plotter {
   }  
   
   void clear() {
+    println( "CLEAR");
       numPlottedPixels = 0;
   }
   
@@ -152,7 +159,7 @@ class Plotter {
   void draw() {
     drawAxes();
     drawLabels();
-    drawPlot();
+    updatePlot();
   }
   
   private void drawLabels() {
@@ -196,21 +203,44 @@ class Plotter {
      
   }
   
-  private void drawPlot() {
+  void drawPlot(int headsetNum) {
+     for( int i = 0; i < numPlottedPixels; i++ ) {
+         //if( i > 10 )  
+         //  println("drawPlot() " + str(headsetNum) +" = " + plotData[headsetNum][i] );
+        
+         point( drawX + i, drawY + h - plotData[headsetNum][i]);
+     }
+  }
+  
+   private void updatePlot() {
      if( bRunning ) {
        if( pixelTimer.expired()) {
-          //--XXX: get next chuck of data 
+         pixelTimer.start();
+         
+         for( int i = 0; i < numHeadsets; i++ ) {
+             plotData[i][numPlottedPixels] = headsets[i].getPlotValue() * vPlotMultiplier;
+             headsets[i].nextPlotValue(); 
+             
+             //if( i > 10 )
+             //   println("plot data for headset #" + str(i) +" = " + plotData[i][numPlottedPixels] );
+          }
           
-          pixelTimer.start();
           numPlottedPixels = numPlottedPixels + 1;
+         
           println("pixeltimer: " + str(numPlottedPixels) );
+          
+          
+           
+         
        }
        if( plotTimer.expired()) {
-           println("done");
+           println("DONE: Plot time expired");
            bRunning = false;
        }
      }
-  }
+   }
+   
+   
 }
   
   

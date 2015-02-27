@@ -29,6 +29,7 @@ void setup() {
   
   debugDisplay = new DebugDisplay(numDevices,headsets);
   dinnerDisplay = new DinnerDisplay(numDevices,headsets);
+  dinnerDisplay.toggleHelperImage();
 }
 
 void draw() {
@@ -46,14 +47,17 @@ void stop() {
 
 void keyPressed() {
    // SPACE = debug mode
+   if( key == '1' )
+      dinnerDisplay.toggleHelperImage();
+      
   if (key == 'd' || key == 'D')
        bDebugDisplay = !bDebugDisplay;
-  
-  if( key == '1' )
-      dinnerDisplay.toggleHelperImage();
+       
+    if (key == 'c' || key == 'C')
+       dinnerDisplay.clearPlot();
   
   if( key == ' ' )
-      dinnerDisplay.startPressed();
+      dinnerDisplay.startPlot();
 }
 
 

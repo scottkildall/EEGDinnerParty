@@ -37,16 +37,19 @@ class DinnerDisplay {
     iconX = iconX + iconXMargin;
     displays[3] = new DinnerHeadsetDisplay( "beaker_icon.png", 70, 173, 0, tasteX, tasteY, iconX, iconY);
     
-    helperImage = loadImage("background.jpg");
+    
     bannerImage = loadImage("banner.png");
     
     //-- allocate and initialize plotter
     plotter = new Plotter(headsets, 162, 234 );
-    plotter.initialize( 1584, 344, 5.0f, 10, 5);
+    plotter.initialize( 1584, 344, 1.0f, 10, 5);
   }
   
   public void toggleHelperImage() {
      bDisplayHelperImage = !bDisplayHelperImage; 
+     
+     if( bDisplayHelperImage )
+       helperImage = loadImage("background.jpg");
   }
   
   //-- draw 
@@ -67,15 +70,24 @@ class DinnerDisplay {
       displays[i].draw(headsets[i]); 
       
      plotter.draw();
+     for( int i = 0; i < numDevices; i++ ) {
+        displays[i].setFillColor();
+        plotter.drawPlot(i);
+     }
      
      for( int i = 0; i < numDevices; i++ )
         displays[i].drawIcons(); 
   }
   
   //-- we can also use this as a toggle button
-  public void startPressed() {
+  public void startPlot() {
       plotter.clear();
       plotter.start();
+  }
+  
+  //-- we can also use this as a toggle button
+  public void clearPlot() {
+      plotter.clear();
   }
 }
   
