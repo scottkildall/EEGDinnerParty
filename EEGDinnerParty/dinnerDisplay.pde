@@ -6,14 +6,17 @@
 
 class DinnerDisplay {
   DinnerHeadsetDisplay[] displays;
+  MuseHeadset [] headsets;
   int numDevices;
   PImage helperImage;
   PImage bannerImage;
   Boolean bDisplayHelperImage = true;
+  Plotter plotter;
   
   //-- color is a name, like "yellow", "red", "green", blue"
-  DinnerDisplay(int _numDevices) {
+  DinnerDisplay(int _numDevices, MuseHeadset [] _headsets) {
     numDevices = _numDevices;
+    headsets = _headsets;
     
     displays = new DinnerHeadsetDisplay[numDevices];
     
@@ -36,6 +39,10 @@ class DinnerDisplay {
     
     helperImage = loadImage("background.jpg");
     bannerImage = loadImage("banner.png");
+    
+    //-- allocate and initialize plotter
+    plotter = new Plotter(headsets, 162, 234 );
+    plotter.initialize( 1584, 344, 5.0f, 10, 5);
   }
   
   public void toggleHelperImage() {
@@ -43,7 +50,7 @@ class DinnerDisplay {
   }
   
   //-- draw 
-  public void draw(MuseHeadset [] headsets) {
+  public void draw() {
     background(255);    
     ellipseMode(CENTER);  // Set ellipseMode to CENTER
     
@@ -59,8 +66,16 @@ class DinnerDisplay {
     for( int i = 0; i < numDevices; i++ )
       displays[i].draw(headsets[i]); 
       
+     plotter.draw();
+     
      for( int i = 0; i < numDevices; i++ )
         displays[i].drawIcons(); 
+  }
+  
+  //-- we can also use this as a toggle button
+  public void startPressed() {
+      plotter.clear();
+      plotter.start();
   }
 }
   

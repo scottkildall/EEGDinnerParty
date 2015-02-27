@@ -27,15 +27,15 @@ void setup() {
     headsets[i] = new  MuseHeadset(portNum);
   }
   
-  debugDisplay = new DebugDisplay(numDevices);
-  dinnerDisplay = new DinnerDisplay(numDevices);
+  debugDisplay = new DebugDisplay(numDevices,headsets);
+  dinnerDisplay = new DinnerDisplay(numDevices,headsets);
 }
 
 void draw() {
   if( bDebugDisplay )
-    debugDisplay.draw(headsets);
+    debugDisplay.draw();
   else
-    dinnerDisplay.draw(headsets);
+    dinnerDisplay.draw();
 }
 
 void stop() {
@@ -46,12 +46,14 @@ void stop() {
 
 void keyPressed() {
    // SPACE = debug mode
-  if (key == ' ' || key == ' ') {
+  if (key == 'd' || key == 'D')
        bDebugDisplay = !bDebugDisplay;
-  }
   
   if( key == '1' )
       dinnerDisplay.toggleHelperImage();
+  
+  if( key == ' ' )
+      dinnerDisplay.startPressed();
 }
 
 
