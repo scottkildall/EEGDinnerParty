@@ -44,6 +44,8 @@ class MuseHeadset {
   float plotValue;
   boolean bRandomMode;
   
+  float tasteIndex;
+  
   MuseHeadset(int thePort) {
     port = thePort;
     osc = new OscP5(this,port);
@@ -66,7 +68,17 @@ class MuseHeadset {
     lastPacketTime = millis();
     
     bRandomMode = true;
-    plotValue = random(0,100);
+    
+    resetData();
+  }
+  
+  float getTasteIndex() {
+    return tasteIndex; 
+  }
+  
+  void resetData() {
+     tasteIndex = 50;
+     plotValue = random(0,100);
   }
   
   float getPlotValue() {
@@ -80,6 +92,12 @@ class MuseHeadset {
           plotValue = plotValue + random(-plotValue,3.5);
         else if( plotValue > 100 )
           plotValue = plotValue - random((plotValue-100),3.5);
+          
+        tasteIndex = tasteIndex + random(-1,1);
+        if( tasteIndex < 0 )
+          tasteIndex = 0;
+        else if( tasteIndex > 100 )
+          tasteIndex = 100;
       }
    }
              

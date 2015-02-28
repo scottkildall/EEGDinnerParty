@@ -26,23 +26,24 @@ class DinnerDisplay {
     int iconX = 1538;
     int iconXMargin = 63;
     int iconY = 232;
-    displays[0] = new DinnerHeadsetDisplay("pig_icon.png", 132, 18, 37, tasteX, tasteY, iconX, iconY);
+    displays[0] = new DinnerHeadsetDisplay(headsets[0], "pig_icon.png", 132, 18, 37, tasteX, tasteY, iconX, iconY);
     tasteX = tasteX + tasteXMargin;
     iconX = iconX + iconXMargin;
-    displays[1] = new DinnerHeadsetDisplay( "martini_icon.png", 89, 81, 148, tasteX, tasteY, iconX, iconY);
+    displays[1] = new DinnerHeadsetDisplay( headsets[1], "martini_icon.png", 89, 81, 148, tasteX, tasteY, iconX, iconY);
     tasteX = tasteX + tasteXMargin;
     iconX = iconX + iconXMargin;
-    displays[2] = new DinnerHeadsetDisplay( "fire_icon.png", 255, 152, 33, tasteX, tasteY, iconX, iconY);
+    displays[2] = new DinnerHeadsetDisplay( headsets[2], "fire_icon.png", 255, 152, 33, tasteX, tasteY, iconX, iconY);
     tasteX = tasteX + tasteXMargin;
     iconX = iconX + iconXMargin;
-    displays[3] = new DinnerHeadsetDisplay( "beaker_icon.png", 70, 173, 0, tasteX, tasteY, iconX, iconY);
+    displays[3] = new DinnerHeadsetDisplay( headsets[3], "beaker_icon.png", 70, 173, 0, tasteX, tasteY, iconX, iconY);
     
     
     bannerImage = loadImage("banner.png");
     
     //-- allocate and initialize plotter
+    float numMinutes = 1.0f;  // 1.0 is good for testing
     plotter = new Plotter(headsets, 162, 234 );
-    plotter.initialize( 1584, 344, 1.0f, 10, 5);
+    plotter.initialize( 1584, 344, numMinutes, 10, 5);
   }
   
   public void toggleHelperImage() {
@@ -64,7 +65,7 @@ class DinnerDisplay {
       noTint();
     }
     imageMode(CORNER);
-      image(bannerImage,0,0);
+     image(bannerImage,0,0);
     
     for( int i = 0; i < numDevices; i++ )
       displays[i].draw(headsets[i]); 

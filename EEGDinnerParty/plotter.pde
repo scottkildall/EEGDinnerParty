@@ -39,6 +39,9 @@ class Plotter {
   
   //-- alloc this
   float [][] plotData;
+  
+  float lastMillis;
+ 
   //-- constructor, mostly empty
   Plotter(MuseHeadset [] _headsets, float _drawX, float _drawY) {
       headsets = _headsets;
@@ -125,12 +128,14 @@ class Plotter {
     
     plotTimer = new Timer(duration);
     
-    long pixelTimerDuration = duration/numPixels+1;
+    
+    long msAdjust = 10;
+    long pixelTimerDuration = duration/numPixels - msAdjust;
     println( "duration = " + str(duration) );
+    println( "numPixels = " + str(numPixels) );
     println( "plotter.pixelTimerDuration = " + str(pixelTimerDuration) );
     
     pixelTimer = new Timer(pixelTimerDuration);
-    
   }
   
   //-- begins a new plot: initializes plotter, clears old values
@@ -141,6 +146,7 @@ class Plotter {
       return;
     }
     numPlottedPixels = 0;
+    println( "start millis() = " + millis() );
     plotTimer.start();
     pixelTimer.start();
     
@@ -205,37 +211,32 @@ class Plotter {
   
   void drawPlot(int headsetNum) {
      for( int i = 0; i < numPlottedPixels; i++ ) {
-         //if( i > 10 )  
-         //  println("drawPlot() " + str(headsetNum) +" = " + plotData[headsetNum][i] );
-        
-         point( drawX + i, drawY + h - plotData[headsetNum][i]);
+       point( drawX + i, drawY + h - plotData[headsetNum][i]);
      }
   }
   
    private void updatePlot() {
      if( bRunning ) {
        if( pixelTimer.expired()) {
+         
+         //lastMillis = millis();
+
          pixelTimer.start();
          
          for( int i = 0; i < numHeadsets; i++ ) {
              plotData[i][numPlottedPixels] = headsets[i].getPlotValue() * vPlotMultiplier;
              headsets[i].nextPlotValue(); 
-             
-             //if( i > 10 )
-             //   println("plot data for headset #" + str(i) +" = " + plotData[i][numPlottedPixels] );
           }
           
-          numPlottedPixels = numPlottedPixels + 1;
-         
-          println("pixeltimer: " + str(numPlottedPixels) );
-          
-          
-           
-         
+         // prevent overflow, in case plot pixels exceeds buffer
+          if( numPlottedPixels < numPixels-1 )
+            numPlottedPixels = numPlottedPixels + 1; 
        }
        if( plotTimer.expired()) {
            println("DONE: Plot time expired");
+           println("pixeltimer, num Plotted pixels: " + str(numPlottedPixels) );
            bRunning = false;
+           println( "end millis() = " + millis() );
        }
      }
    }
