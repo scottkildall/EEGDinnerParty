@@ -5,12 +5,14 @@
 
 
 class DebugDisplay {
+  MuseHeadset [] headsets;
   DebugHeadsetDisplay[] displays;
   int numDevices;
   
   //-- color is a name, like "yellow", "red", "green", blue"
-  DebugDisplay(int _numDevices) {
+  DebugDisplay(int _numDevices, MuseHeadset [] _headsets) {
     numDevices = _numDevices;
+    headsets = _headsets;
     
     displays = new DebugHeadsetDisplay[numDevices];
     displays[0] = new DebugHeadsetDisplay( 50, 50, "red");
@@ -20,7 +22,7 @@ class DebugDisplay {
   }
   
   //-- draw 
-  public void draw(MuseHeadset [] headsets) {
+  public void draw() {
     background(0);    
     ellipseMode(CENTER);  // Set ellipseMode to CENTER
   

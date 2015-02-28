@@ -12,11 +12,16 @@ class DinnerDisplay {
   PImage bannerImage;
   Boolean bDisplayHelperImage = true;
   Plotter plotter;
+  PFont headingFont;    // "Live EEG Feed" and "BBQ Taste Index"
+  PShape graySwatch;
   
   //-- color is a name, like "yellow", "red", "green", blue"
   DinnerDisplay(int _numDevices, MuseHeadset [] _headsets) {
     numDevices = _numDevices;
     headsets = _headsets;
+    
+    headingFont = createFont("Arial-Bold", 36 );  //-- XXX: this needs to be bold
+    makeGraySwatch();
     
     displays = new DinnerHeadsetDisplay[numDevices];
     
@@ -25,7 +30,7 @@ class DinnerDisplay {
     int tasteY = 890;
     int iconX = 1538;
     int iconXMargin = 63;
-    int iconY = 232;
+    int iconY =  148;   //232;
     displays[0] = new DinnerHeadsetDisplay(headsets[0], "pig_icon.png", 132, 18, 37, tasteX, tasteY, iconX, iconY);
     tasteX = tasteX + tasteXMargin;
     iconX = iconX + iconXMargin;
@@ -41,7 +46,7 @@ class DinnerDisplay {
     bannerImage = loadImage("banner.png");
     
     //-- allocate and initialize plotter
-    float numMinutes = 1.0f;  // 1.0 is good for testing
+    float numMinutes = 5.0f;  // 1.0 is good for testing
     plotter = new Plotter(headsets, 162, 234 );
     plotter.initialize( 1584, 344, numMinutes, 10, 5);
   }
@@ -58,14 +63,21 @@ class DinnerDisplay {
     background(255);    
     ellipseMode(CENTER);  // Set ellipseMode to CENTER
     
+    
+    
     if( helperImage != null && bDisplayHelperImage == true ) {
       imageMode(CORNER);
       tint(255,128);
       image(helperImage,0,0);
       noTint();
     }
+    
+    drawGraySwatch();
+    
     imageMode(CORNER);
-     image(bannerImage,0,0);
+    image(bannerImage,0,0);
+    
+    drawLabels();
     
     for( int i = 0; i < numDevices; i++ )
       displays[i].draw(headsets[i]); 
@@ -80,6 +92,18 @@ class DinnerDisplay {
         displays[i].drawIcons(); 
   }
   
+  public void drawLabels() {
+      textFont(headingFont);
+      textAlign(CENTER);
+      fill(0,0,0);
+      text("Live EEG Feed", 355,210);
+      text("BBQ Taster Index", width/2,750);
+  }
+  
+  public void drawGraySwatch() {
+      shape(graySwatch,0,0);
+  }
+  
   //-- we can also use this as a toggle button
   public void startPlot() {
       plotter.clear();
@@ -89,6 +113,10 @@ class DinnerDisplay {
   //-- we can also use this as a toggle button
   public void clearPlot() {
       plotter.clear();
+  }
+  
+  private void makeGraySwatch() {
+     graySwatch = loadShape("grayswatch.svg");
   }
 }
   

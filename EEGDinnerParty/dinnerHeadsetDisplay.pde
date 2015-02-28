@@ -20,6 +20,8 @@ class DinnerHeadsetDisplay {
   PImage iconImage;
   float degreesMultiplier;
   
+  PFont tasteIndexFont;
+  
   //-- color is a name, like "yellow", "red", "green", blue"
   DinnerHeadsetDisplay(MuseHeadset _headset, String iconFilename, int _r, int _g, int _b, int _tasteX, int _tasteY, int _iconX, int _iconY ) {
     headset = _headset;
@@ -41,6 +43,8 @@ class DinnerHeadsetDisplay {
     
     // for taste index, dial rotation
     degreesMultiplier = 180.0/100.0;
+    
+    tasteIndexFont = createFont("Arial", 14 );  //-- XXX: needs GE font, whatever this is
   }
   
   public void setFillColor() {
@@ -52,6 +56,7 @@ class DinnerHeadsetDisplay {
   public void draw(MuseHeadset headset) {
     drawGraph();
     drawTasteIndex();
+    drawTasteIndexLabels();
   }
   
   
@@ -62,14 +67,34 @@ class DinnerHeadsetDisplay {
     
     // rotation code for the dial indicator
     pushMatrix();
-    translate( tasteX,tasteY+70);
+    translate( tasteX,tasteY+80);
     rotate(radians(degreesMultiplier*headset.getTasteIndex()));
     image(tasteDialImage,0,0);
     popMatrix();
     
+    // shows taste index as a percentage
+    /*
     fill(0,0,0);
     textSize(14);
     text( String.format("%.0f",headset.getTasteIndex()) + "%", tasteX, tasteY  );
+    */
+  }
+  
+  // hardcoded-labels
+  void drawTasteIndexLabels() {
+    fill(0,0,0);
+    textFont(tasteIndexFont);
+    textAlign(CENTER);
+    
+    float xLowerOffset = 120;
+    float xUpperOffset = 115;
+    float yLowerOffset = 110;
+    float yUpperOffset = -90;
+    
+    text(  "#Trainee", tasteX - xLowerOffset, tasteY + yLowerOffset );
+     text(  "#SeriousFoodie", tasteX - xUpperOffset, tasteY + yUpperOffset );
+      text(  "#TopChef", tasteX + xUpperOffset,tasteY + yUpperOffset );
+      text(  "#PitMaster", tasteX + xLowerOffset, tasteY + yLowerOffset );
   }
   
   //-- this is a separate draw function since the icons should always be on top of the graph lines from other EEG data

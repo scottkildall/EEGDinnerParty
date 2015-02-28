@@ -34,8 +34,10 @@ int numDevices = 4;
 Boolean bDebugDisplay = false;
 
 public void setup() {
-  size(1920,1080);
-  print(PFont.list());
+  //size(1920,1080 );
+  size(1920,1080, OPENGL );
+  // comment out to see all our fonts
+  //print(PFont.list());
   
   frameRate(60);
 
@@ -46,15 +48,16 @@ public void setup() {
     headsets[i] = new  MuseHeadset(portNum);
   }
   
-  debugDisplay = new DebugDisplay(numDevices);
-  dinnerDisplay = new DinnerDisplay(numDevices);
+  debugDisplay = new DebugDisplay(numDevices,headsets);
+  dinnerDisplay = new DinnerDisplay(numDevices,headsets);
+  dinnerDisplay.toggleHelperImage();
 }
 
 public void draw() {
   if( bDebugDisplay )
-    debugDisplay.draw(headsets);
+    debugDisplay.draw();
   else
-    dinnerDisplay.draw(headsets);
+    dinnerDisplay.draw();
 }
 
 public void stop() {
@@ -65,12 +68,17 @@ public void stop() {
 
 public void keyPressed() {
    // SPACE = debug mode
-  if (key == ' ' || key == ' ') {
-       bDebugDisplay = !bDebugDisplay;
-  }
-  
-  if( key == '1' )
+   if( key == '1' )
       dinnerDisplay.toggleHelperImage();
+      
+  if (key == 'd' || key == 'D')
+       bDebugDisplay = !bDebugDisplay;
+       
+    if (key == 'c' || key == 'C')
+       dinnerDisplay.clearPlot();
+  
+  if( key == ' ' )
+      dinnerDisplay.startPlot();
 }
 
 
@@ -119,12 +127,14 @@ public class Timer {
 
 
 class DebugDisplay {
+  MuseHeadset [] headsets;
   DebugHeadsetDisplay[] displays;
   int numDevices;
   
   //-- color is a name, like "yellow", "red", "green", blue"
-  DebugDisplay(int _numDevices) {
+  DebugDisplay(int _numDevices, MuseHeadset [] _headsets) {
     numDevices = _numDevices;
+    headsets = _headsets;
     
     displays = new DebugHeadsetDisplay[numDevices];
     displays[0] = new DebugHeadsetDisplay( 50, 50, "red");
@@ -134,7 +144,7 @@ class DebugDisplay {
   }
   
   //-- draw 
-  public void draw(MuseHeadset [] headsets) {
+  public void draw() {
     background(0);    
     ellipseMode(CENTER);  // Set ellipseMode to CENTER
   
@@ -455,14 +465,22 @@ class DebugHeadsetDisplay {
 
 class DinnerDisplay {
   DinnerHeadsetDisplay[] displays;
+  MuseHeadset [] headsets;
   int numDevices;
   PImage helperImage;
   PImage bannerImage;
   Boolean bDisplayHelperImage = true;
+  Plotter plotter;
+  PFont headingFont;    // "Live EEG Feed" and "BBQ Taste Index"
+  PShape graySwatch;
   
   //-- color is a name, like "yellow", "red", "green", blue"
-  DinnerDisplay(int _numDevices) {
+  DinnerDisplay(int _numDevices, MuseHeadset [] _headsets) {
     numDevices = _numDevices;
+    headsets = _headsets;
+    
+    headingFont = createFont("Arial-Bold", 36 );  //-- XXX: this needs to be bold
+    makeGraySwatch();
     
     displays = new DinnerHeadsetDisplay[numDevices];
     
@@ -471,30 +489,40 @@ class DinnerDisplay {
     int tasteY = 890;
     int iconX = 1538;
     int iconXMargin = 63;
-    int iconY = 232;
-    displays[0] = new DinnerHeadsetDisplay("pig_icon.png", 132, 18, 37, tasteX, tasteY, iconX, iconY);
+    int iconY =  148;   //232;
+    displays[0] = new DinnerHeadsetDisplay(headsets[0], "pig_icon.png", 132, 18, 37, tasteX, tasteY, iconX, iconY);
     tasteX = tasteX + tasteXMargin;
     iconX = iconX + iconXMargin;
-    displays[1] = new DinnerHeadsetDisplay( "martini_icon.png", 89, 81, 148, tasteX, tasteY, iconX, iconY);
+    displays[1] = new DinnerHeadsetDisplay( headsets[1], "martini_icon.png", 89, 81, 148, tasteX, tasteY, iconX, iconY);
     tasteX = tasteX + tasteXMargin;
     iconX = iconX + iconXMargin;
-    displays[2] = new DinnerHeadsetDisplay( "fire_icon.png", 255, 152, 33, tasteX, tasteY, iconX, iconY);
+    displays[2] = new DinnerHeadsetDisplay( headsets[2], "fire_icon.png", 255, 152, 33, tasteX, tasteY, iconX, iconY);
     tasteX = tasteX + tasteXMargin;
     iconX = iconX + iconXMargin;
-    displays[3] = new DinnerHeadsetDisplay( "beaker_icon.png", 70, 173, 0, tasteX, tasteY, iconX, iconY);
+    displays[3] = new DinnerHeadsetDisplay( headsets[3], "beaker_icon.png", 70, 173, 0, tasteX, tasteY, iconX, iconY);
     
-    helperImage = loadImage("background.jpg");
+    
     bannerImage = loadImage("banner.png");
+    
+    //-- allocate and initialize plotter
+    float numMinutes = 5.0f;  // 1.0 is good for testing
+    plotter = new Plotter(headsets, 162, 234 );
+    plotter.initialize( 1584, 344, numMinutes, 10, 5);
   }
   
   public void toggleHelperImage() {
      bDisplayHelperImage = !bDisplayHelperImage; 
+     
+     if( bDisplayHelperImage )
+       helperImage = loadImage("background.jpg");
   }
   
   //-- draw 
-  public void draw(MuseHeadset [] headsets) {
+  public void draw() {
     background(255);    
     ellipseMode(CENTER);  // Set ellipseMode to CENTER
+    
+    
     
     if( helperImage != null && bDisplayHelperImage == true ) {
       imageMode(CORNER);
@@ -502,14 +530,52 @@ class DinnerDisplay {
       image(helperImage,0,0);
       noTint();
     }
+    
+    drawGraySwatch();
+    
     imageMode(CORNER);
-      image(bannerImage,0,0);
+    image(bannerImage,0,0);
+    
+    drawLabels();
     
     for( int i = 0; i < numDevices; i++ )
       displays[i].draw(headsets[i]); 
       
+     plotter.draw();
+     for( int i = 0; i < numDevices; i++ ) {
+        displays[i].setFillColor();
+        plotter.drawPlot(i);
+     }
+     
      for( int i = 0; i < numDevices; i++ )
         displays[i].drawIcons(); 
+  }
+  
+  public void drawLabels() {
+      textFont(headingFont);
+      textAlign(CENTER);
+      fill(0,0,0);
+      text("Live EEG Feed", 355,210);
+      text("BBQ Taster Index", width/2,750);
+  }
+  
+  public void drawGraySwatch() {
+      shape(graySwatch,0,0);
+  }
+  
+  //-- we can also use this as a toggle button
+  public void startPlot() {
+      plotter.clear();
+      plotter.start();
+  }
+  
+  //-- we can also use this as a toggle button
+  public void clearPlot() {
+      plotter.clear();
+  }
+  
+  private void makeGraySwatch() {
+     graySwatch = loadShape("grayswatch.svg");
   }
 }
   
@@ -523,6 +589,7 @@ class DinnerDisplay {
 */
  
 class DinnerHeadsetDisplay {
+  MuseHeadset headset;
   // colors for the graphing function
   int r;
   int g;
@@ -534,9 +601,13 @@ class DinnerHeadsetDisplay {
   PImage tasteDialImage;
   PImage tasteBackgroundImage;
   PImage iconImage;
+  float degreesMultiplier;
+  
+  PFont tasteIndexFont;
   
   //-- color is a name, like "yellow", "red", "green", blue"
-  DinnerHeadsetDisplay(String iconFilename, int _r, int _g, int _b, int _tasteX, int _tasteY, int _iconX, int _iconY ) {
+  DinnerHeadsetDisplay(MuseHeadset _headset, String iconFilename, int _r, int _g, int _b, int _tasteX, int _tasteY, int _iconX, int _iconY ) {
+    headset = _headset;
     // Save local variables
     r = _r;
     g = _g;
@@ -548,15 +619,27 @@ class DinnerHeadsetDisplay {
     
     //-- hardcoded. In an ideal world, these would be static variables, but memory isn't an issue here
     tasteBackgroundImage = loadImage("taste_index_background.png");
-    tasteDialImage = loadImage("taste_index_dial.png");
+   // tasteDialImage = loadImage("taste_index_dial.png");
+   // tasteDialImage = loadImage("gradient_testdial.jpg");
+   tasteDialImage = loadImage("taste_index_dial_elongated.png");
     iconImage = loadImage(iconFilename);
     
+    // for taste index, dial rotation
+    degreesMultiplier = 180.0f/100.0f;
+    
+    tasteIndexFont = createFont("Arial", 14 );  //-- XXX: needs GE font, whatever this is
+  }
+  
+  public void setFillColor() {
+    fill(r,g,b);
+    stroke(r,g,b);  
   }
   
   //-- draw 
   public void draw(MuseHeadset headset) {
     drawGraph();
     drawTasteIndex();
+    drawTasteIndexLabels();
   }
   
   
@@ -565,8 +648,36 @@ class DinnerHeadsetDisplay {
     image(tasteBackgroundImage, tasteX, tasteY);
     image(iconImage, tasteX, tasteY + 130 );
     
-    imageMode(CORNER);
-    image(tasteDialImage,tasteX,tasteY + 70);
+    // rotation code for the dial indicator
+    pushMatrix();
+    translate( tasteX,tasteY+80);
+    rotate(radians(degreesMultiplier*headset.getTasteIndex()));
+    image(tasteDialImage,0,0);
+    popMatrix();
+    
+    // shows taste index as a percentage
+    /*
+    fill(0,0,0);
+    textSize(14);
+    text( String.format("%.0f",headset.getTasteIndex()) + "%", tasteX, tasteY  );
+    */
+  }
+  
+  // hardcoded-labels
+  public void drawTasteIndexLabels() {
+    fill(0,0,0);
+    textFont(tasteIndexFont);
+    textAlign(CENTER);
+    
+    float xLowerOffset = 120;
+    float xUpperOffset = 115;
+    float yLowerOffset = 110;
+    float yUpperOffset = -90;
+    
+    text(  "#Trainee", tasteX - xLowerOffset, tasteY + yLowerOffset );
+     text(  "#SeriousFoodie", tasteX - xUpperOffset, tasteY + yUpperOffset );
+      text(  "#TopChef", tasteX + xUpperOffset,tasteY + yUpperOffset );
+      text(  "#PitMaster", tasteX + xLowerOffset, tasteY + yLowerOffset );
   }
   
   //-- this is a separate draw function since the icons should always be on top of the graph lines from other EEG data
@@ -624,6 +735,11 @@ class MuseHeadset {
   
   int lastPacketTime;
   
+  float plotValue;
+  boolean bRandomMode;
+  
+  float tasteIndex;
+  
   MuseHeadset(int thePort) {
     port = thePort;
     osc = new OscP5(this,port);
@@ -644,8 +760,41 @@ class MuseHeadset {
     zeroQWaveValues();
     
     lastPacketTime = millis();
+    
+    bRandomMode = true;
+    
+    resetData();
   }
   
+  public float getTasteIndex() {
+    return tasteIndex; 
+  }
+  
+  public void resetData() {
+     tasteIndex = 50;
+     plotValue = random(0,100);
+  }
+  
+  public float getPlotValue() {
+     return plotValue; 
+  }
+   
+   public void nextPlotValue() {
+      if( bRandomMode ) {
+        plotValue = plotValue + random(-3,3);
+        if( plotValue < 0 )
+          plotValue = plotValue + random(-plotValue,3.5f);
+        else if( plotValue > 100 )
+          plotValue = plotValue - random((plotValue-100),3.5f);
+          
+        tasteIndex = tasteIndex + random(-1,1);
+        if( tasteIndex < 0 )
+          tasteIndex = 0;
+        else if( tasteIndex > 100 )
+          tasteIndex = 100;
+      }
+   }
+             
   public void zeroQWaveValues() {
       qAlpha = 0.0f;
       qBeta = 0.0f;
@@ -756,6 +905,251 @@ class MuseHeadset {
    lastPacketTime = millis();
   }
 }
+/**
+ *   Plotter.pde
+ *    
+ *  Plots waveforms from headsets on the screen, using timer classes for callbacks
+ */
+ 
+
+
+class Plotter {
+  MuseHeadset [] headsets;
+  int numHeadsets;
+  
+  Boolean bRunning = false;
+  int numPlottedPixels;   // how many pixels we have plotted on the screen, we use this for drawing
+  Timer plotTimer;    // this should be the duration of the dinner party
+  Timer pixelTimer;    // this will get called for every pixel that we plot
+  
+  float drawX;
+  float drawY;
+  float w;  // width
+  float h; // height
+  int numPixels;  // same as width
+  float numMinutes;
+  int numTimeIncrements;
+  int numHeightIncrements;
+  long duration;
+  
+  // more drawing code
+  float vLabelsOffset;  // how much space between each line or for text
+  float vPlotMultiplier;  // how much we mutliply each data point by to match our vertical plot
+  String [] vLabels;      // vertical labels, for BBQ Affinity
+  
+  float hLabelsOffset;  // how much horziontal space
+  String [] hLabels;      // vertical labels, for BBQ Affinity
+  
+
+  PFont axesTextFont;
+  PFont axesNumbersFont;
+  
+  //-- alloc this
+  float [][] plotData;
+  
+  float lastMillis;
+ 
+  //-- constructor, mostly empty
+  Plotter(MuseHeadset [] _headsets, float _drawX, float _drawY) {
+      headsets = _headsets;
+      numHeadsets = headsets.length;
+      drawX = _drawX;
+      drawY = _drawY;
+      
+      numPlottedPixels = 0;
+      plotTimer = null;
+      
+      //-- fonts for drawing
+      axesTextFont = createFont("Arial", 28.3f );  
+      axesNumbersFont = createFont("Arial", 14 );  //-- XXX: this needs to be updated
+  }
+  
+  
+  //-- must be called before start(), we pack the initialization code here, mostly for legibility
+  //-- duration is in minutes and we will subdivide internally
+  //-- time always starts at zero
+  //-- height is always 0-100, for 0-100, num height increments = FIVE, [0,20,40,60,80,100]
+  public void initialize( float _w, float _h, float _numMinutes, int _numTimeIncrements, int _numHeightIncrements) {
+    //-- always have to have at least 2 increments: a start and front
+    if( _numTimeIncrements < 1 || _numHeightIncrements < 1 ) {
+       println( "error in plotter.initialize(): _numTimeIncrements and _numHeightIncrements must be > 1" );
+       return; 
+    }
+    
+    // VARIABLES FOR WIDTH / HORIZONTAL
+    numPixels = (int)_w - 20;  // number of pixels is actually slightly less than the width
+    println("num pixels = " + str(numPixels) );
+    
+    w = _w;
+    numTimeIncrements = _numTimeIncrements;
+    
+    // Allocate receptors for pixels
+    plotData = new float[numHeadsets][numPixels];
+    numPlottedPixels = 0;
+    
+    //-- how much space between each horizontal line, used in drawAxes()
+    hLabelsOffset = (float)numPixels/(float)(numTimeIncrements);
+    
+    // generate all the strings for drawing
+    numMinutes = _numMinutes;
+    hLabels = new String[numTimeIncrements+1];
+    float incrementValue = numMinutes/numTimeIncrements;
+    //println( "H plotter: increment value = " + str(incrementValue) );
+    for( int i = 0; i < (numTimeIncrements+1); i++ ) {
+      float fpLabel = 0.0f + (i*incrementValue);
+      hLabels[i] = String.format("%.1f",fpLabel);
+      
+      // trim off extra ".0"
+      int len = hLabels[i].length();
+      if( len > 1  ) {
+        String tailStr = hLabels[i].substring(len-2,len);
+        if(tailStr.equals(".0"))
+          hLabels[i] = hLabels[i].substring(0,len-2);
+      }
+       
+      //println( "plotter: string label = " + hLabels[i] );
+    }
+    
+    // VARIABLES FOR HEIGHT / VERTICAL
+    h = _h;
+    numHeightIncrements = _numHeightIncrements;
+    vPlotMultiplier = h/100.0f;
+    
+    //-- how much space between each horizontal line, used in drawAxes()
+    vLabelsOffset = h/(float)(numHeightIncrements);
+    vLabels = new String[numHeightIncrements+1];
+    int incrValue = 100/numHeightIncrements;
+//    println( "V plotter: vLabelsOffset = " + str(vLabelsOffset) );
+//    println( "V plotter: height = " + str(h) );
+//    println( "V plotter: increment value = " + str(incrementValue) );
+    for( int i = 0; i < (numHeightIncrements+1); i++ ) {
+      int intLabel = 100 - (i*incrValue);
+      vLabels[i] = str(intLabel);
+      println( "plotter: string label = " + vLabels[i] );
+    }
+    
+    
+    duration = (long)numMinutes * 60 * 1000;
+    println( "plotter.duration = " + str(duration) );
+    
+    plotTimer = new Timer(duration);
+    
+    
+    long msAdjust = 10;
+    long pixelTimerDuration = duration/numPixels - msAdjust;
+    println( "duration = " + str(duration) );
+    println( "numPixels = " + str(numPixels) );
+    println( "plotter.pixelTimerDuration = " + str(pixelTimerDuration) );
+    
+    pixelTimer = new Timer(pixelTimerDuration);
+  }
+  
+  //-- begins a new plot: initializes plotter, clears old values
+  public void start() {
+    //-- plotTimer is null if initialize() hasn't been called
+    if( plotTimer == null ) {
+      println("plotter.initialize() must be called before plotter.start()");  
+      return;
+    }
+    numPlottedPixels = 0;
+    println( "start millis() = " + millis() );
+    plotTimer.start();
+    pixelTimer.start();
+    
+    bRunning = true;
+  }  
+  
+  public void clear() {
+    println( "CLEAR");
+      numPlottedPixels = 0;
+  }
+  
+  public boolean isDone() {
+     return (bRunning == false);
+  }
+  
+  public void draw() {
+    drawAxes();
+    drawLabels();
+    updatePlot();
+  }
+  
+  private void drawLabels() { 
+    textFont(axesTextFont);
+    textAlign(CENTER);
+    
+    text( "Time (minutes ago)", width/2 -20, 660 );
+     
+    pushMatrix();
+    translate( width/2 -900, height/2 - 140);
+    rotate(radians(270));
+    text( "BBQ Affinity (%)", 0,0);
+    popMatrix();
+     
+  }
+  private void drawAxes() {
+      // draw the numbers here
+      textFont(axesNumbersFont);
+      textAlign(CENTER);
+      
+      // gray color for the lines
+      fill(0,0,0);
+      stroke(202,205,208);
+      strokeWeight(2);
+      
+      // draw horizontal stuff
+      for( int i = 0; i < (numTimeIncrements+1); i++ )  {
+          text( hLabels[i], drawX + (i * hLabelsOffset), drawY + h + 28 );
+      }
+      
+      // draw veritcal stuff
+       for( int i = 0; i < (numHeightIncrements+1); i++ )  {
+           text( vLabels[i], drawX - 30, drawY + (i * vLabelsOffset) + 6 );
+           
+           line(drawX,drawY + (i * vLabelsOffset) ,drawX + w, drawY + (i * vLabelsOffset) );
+       }
+     
+     //    line(drawX,drawY+h,drawX + w, drawY+h );
+     
+  }
+  
+  public void drawPlot(int headsetNum) {
+     for( int i = 0; i < numPlottedPixels; i++ ) {
+       point( drawX + i, drawY + h - plotData[headsetNum][i]);
+     }
+  }
+  
+   private void updatePlot() {
+     if( bRunning ) {
+       if( pixelTimer.expired()) {
+         
+         //lastMillis = millis();
+
+         pixelTimer.start();
+         
+         for( int i = 0; i < numHeadsets; i++ ) {
+             plotData[i][numPlottedPixels] = headsets[i].getPlotValue() * vPlotMultiplier;
+             headsets[i].nextPlotValue(); 
+          }
+          
+         // prevent overflow, in case plot pixels exceeds buffer
+          if( numPlottedPixels < numPixels-1 )
+            numPlottedPixels = numPlottedPixels + 1; 
+       }
+       if( plotTimer.expired()) {
+           println("DONE: Plot time expired");
+           println("pixeltimer, num Plotted pixels: " + str(numPlottedPixels) );
+           bRunning = false;
+           println( "end millis() = " + millis() );
+       }
+     }
+   }
+   
+   
+}
+  
+  
+ 
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "--full-screen", "--bgcolor=#666666", "--hide-stop", "EEGDinnerParty" };
     if (passedArgs != null) {

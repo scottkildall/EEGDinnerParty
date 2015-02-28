@@ -15,8 +15,10 @@ int numDevices = 4;
 Boolean bDebugDisplay = false;
 
 void setup() {
+  //size(1920,1080 );
   size(1920,1080, OPENGL );
-  print(PFont.list());
+  // comment out to see all our fonts
+  //print(PFont.list());
   
   frameRate(60);
 

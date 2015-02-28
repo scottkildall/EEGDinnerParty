@@ -15,8 +15,10 @@ int numDevices = 4;
 Boolean bDebugDisplay = false;
 
 void setup() {
-  size(1920,1080);
-  print(PFont.list());
+  //size(1920,1080 );
+  size(1920,1080, OPENGL );
+  // comment out to see all our fonts
+  //print(PFont.list());
   
   frameRate(60);
 
@@ -27,15 +29,16 @@ void setup() {
     headsets[i] = new  MuseHeadset(portNum);
   }
   
-  debugDisplay = new DebugDisplay(numDevices);
-  dinnerDisplay = new DinnerDisplay(numDevices);
+  debugDisplay = new DebugDisplay(numDevices,headsets);
+  dinnerDisplay = new DinnerDisplay(numDevices,headsets);
+  dinnerDisplay.toggleHelperImage();
 }
 
 void draw() {
   if( bDebugDisplay )
-    debugDisplay.draw(headsets);
+    debugDisplay.draw();
   else
-    dinnerDisplay.draw(headsets);
+    dinnerDisplay.draw();
 }
 
 void stop() {
@@ -46,12 +49,17 @@ void stop() {
 
 void keyPressed() {
    // SPACE = debug mode
-  if (key == ' ' || key == ' ') {
-       bDebugDisplay = !bDebugDisplay;
-  }
-  
-  if( key == '1' )
+   if( key == '1' )
       dinnerDisplay.toggleHelperImage();
+      
+  if (key == 'd' || key == 'D')
+       bDebugDisplay = !bDebugDisplay;
+       
+    if (key == 'c' || key == 'C')
+       dinnerDisplay.clearPlot();
+  
+  if( key == ' ' )
+      dinnerDisplay.startPlot();
 }
 
 
