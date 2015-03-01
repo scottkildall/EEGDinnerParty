@@ -207,9 +207,28 @@ class Plotter {
   }
   
   void drawPlot(int headsetNum) {
+    //-- point plots
+    /*
      for( int i = 0; i < numPlottedPixels; i++ ) {
        point( drawX + i, drawY + h - plotData[headsetNum][i]);
      }
+     */
+     float lastX = 0;
+     float lastY = 0;
+     
+      for( int i = 0; i < numPlottedPixels; i = i + 1 ) {
+        float x = drawX + i;
+          float y = drawY + h - plotData[headsetNum][i];
+          
+        if( i > 0 ) {
+          
+          line( lastX, lastY, x, y );
+          
+        }
+        lastX = x;
+        lastY = y;
+     }
+     
   }
   
    private void updatePlot() {
