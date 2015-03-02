@@ -15,13 +15,19 @@
  * Device name can be changed in SystemPrefs->Bluetooth
  */
  
+ 
+// globals for percentages
+float pctAlpha = .10;
+float pctBeta = .30;
+float pctDelta = .20;
+float pctGamma = .10;
+float pctTheta = .30;
+
 class MuseHeadset {
   int port;
   OscP5 osc;
   
-  //int touchingForehead = 0;
-  //float batteryPct = -1.0;    // NO READING
-  //int[] good; // num sensors
+  int touchingForehead = 0;
   
   // These are "absolute" rather than relative values
   float [] alpha;
@@ -39,19 +45,20 @@ class MuseHeadset {
   float qGamma;
   float qTheta;
   
-  int lastPacketTime;
+  ///XXX: removeint lastPacketTime;
   
   float plotValue;
-  boolean bRandomMode;
+  boolean bRandomMode;    // XXX: we will remove this later
+  boolean bRandomTasteIndex;
   
   float tasteIndex;
   float combinedQValue;
+  long lastPacketMS = 0;
   
   MuseHeadset(int thePort) {
     port = thePort;
     osc = new OscP5(this,port);
     
-    //good = new int[4];
     alpha = new float[4];
     beta = new float[4];
     delta = new float[4];
@@ -66,19 +73,25 @@ class MuseHeadset {
     
     zeroQWaveValues();
     
-    lastPacketTime = millis();
+    ///XXX: remove lastPacketTime = millis();
     
-    if( thePort == 5006 )
+    ///XXX: clean
+    //if( thePort == 5007 )
       bRandomMode = false;
-    else
-      bRandomMode = true;
+    //else
+     // bRandomMode = true;
+     
+     bRandomTasteIndex = true;
     resetData();
+    lastPacketMS = millis();
   }
   
   //-- called by draw() loop, will update internal data arrays
-  void update() {
-    
+  Boolean isTouchingForehead() {
+      return (touchingForehead == 1);
   }
+  
+  
   
   float getTasteIndex() {
     return tasteIndex; 
@@ -101,16 +114,27 @@ class MuseHeadset {
      else {
        //println( "CombinedQ Value = " + str(combinedQValue));
        
-       float newQValue = (qAlpha * 0.2) + (qBeta * 0.2) + (qDelta * 0.2) + (qGamma * 0.2) + (qTheta * 0.2);
+       float newQValue = (qAlpha * pctAlpha) + (qBeta * pctBeta) + (qDelta * pctDelta) + (qGamma * pctGamma) + (qTheta * pctTheta);
        
        if( newQValue <  combinedQValue+1 &&  newQValue >  combinedQValue-1 )
          combinedQValue = noiseFilter(newQValue);
-         
-       combinedQValue = newQValue;
+       
+       combinedQValue = checkMaxMin(newQValue,3.0);
+      
        //println( "return QValue = " + str(combinedQValue) );
        return combinedQValue;
      } 
   }
+   
+   // makes sure we don't go over 100 or less than 0, does some randomization goodies
+   float checkMaxMin(float qValue, float bumpRange) {
+      if( qValue > 100 )
+         qValue = 100 - random(.5,bumpRange+.5);  
+      else if( qValue < 0 )
+        qValue = 0 + random(.5,bumpRange+.5);
+        
+      return qValue;
+   }
    
    float noiseFilter(float qValue) {
      float filterRange = 2.0;
@@ -124,7 +148,7 @@ class MuseHeadset {
    }
    
    void nextPlotValue() {
-      if( bRandomMode ) {
+      if( bRandomTasteIndex && touchingForehead == 1) {
         float randRange = 3.0;
         plotValue = plotValue + random(-randRange,randRange);
         if( plotValue < 0 )
@@ -160,7 +184,7 @@ class MuseHeadset {
     for( int i = 0; i < 4; i++ ) {
       
        if( horseshoeValues[i] == 1.0 ) {
-         qValue = map(waveValues[i],-1.0,0.0,0,100) * 8;    // 8x factor for a good connection
+         qValue = map(waveValues[i],-1.0,0.0,0,100) * 9;    // 9x factor for a good connection
          divisor = divisor + 8;
        }
        else if( horseshoeValues[i] == 2.0 ) {
@@ -219,7 +243,7 @@ class MuseHeadset {
         alpha[i] = theOscMessage.get(i).floatValue();
       }
       
-      print( "ALPHA: " );
+      //println( "ALPHA: " );
       qAlpha = generateQWaveValue(alpha,qAlpha);  
     }
     
@@ -229,7 +253,7 @@ class MuseHeadset {
         beta[i] = theOscMessage.get(i).floatValue();
       }
       
-      print( "BETA" );
+      //println( "BETA" );
       qBeta = generateQWaveValue(beta,qBeta); 
     }
    
@@ -238,7 +262,7 @@ class MuseHeadset {
       for( int i = 0; i < 4; i++ ) {
         delta[i] = theOscMessage.get(i).floatValue();
       }
-      print( "DETLA :" );
+      //println( "DETLA :" );
        qDelta = generateQWaveValue(delta,qDelta);
        
     }
@@ -249,7 +273,7 @@ class MuseHeadset {
         gamma[i] = theOscMessage.get(i).floatValue();
       }
       
-      print( "GAMMA: " );
+      //println( "GAMMA: " );
       qGamma = generateQWaveValue(gamma,qGamma); 
     }
     
@@ -259,7 +283,7 @@ class MuseHeadset {
         theta[i] = theOscMessage.get(i).floatValue();
       }
       
-      print( "THETA: " );
+      //println( "THETA: " );
       qTheta = generateQWaveValue(theta,qTheta); 
     }
     
@@ -271,15 +295,14 @@ class MuseHeadset {
       generateHorseShoeStrings();
     }
     
-    ///REMOVE (LATER)
-    /*
+    // TOUCHING FOREHEAD
     if(  addrPattern.equals("/muse/elements/touching_forehead") ) {
       //println("touching forehead typetag: "+ theOscMessage.typetag());
       touchingForehead = theOscMessage.get(0).intValue();
-    }  
-    */
+      //println( "TOUCHING FOREHEAD = " + str(touchingForehead) );
+      
+    } 
     
-   // last communication, whatever it might be
-   lastPacketTime = millis();
+    lastPacketMS = millis();
   }
 }

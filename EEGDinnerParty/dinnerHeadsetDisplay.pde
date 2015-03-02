@@ -54,9 +54,11 @@ class DinnerHeadsetDisplay {
   
   //-- draw 
   public void draw(MuseHeadset headset) {
-    drawGraph();
-    drawTasteIndex();
-    drawTasteIndexLabels();
+    //if(headset.isTouchingForehead() ) {
+      drawGraph();
+      drawTasteIndex();
+      drawTasteIndexLabels();
+   // }
   }
   
   
@@ -65,12 +67,14 @@ class DinnerHeadsetDisplay {
     image(tasteBackgroundImage, tasteX, tasteY);
     image(iconImage, tasteX, tasteY + 130 );
     
-    // rotation code for the dial indicator
-    pushMatrix();
-    translate( tasteX,tasteY+80);
-    rotate(radians(degreesMultiplier*headset.getTasteIndex()));
-    image(tasteDialImage,0,0);
-    popMatrix();
+    if(headset.isTouchingForehead()) {
+      // rotation code for the dial indicator
+      pushMatrix();
+      translate( tasteX,tasteY+80);
+      rotate(radians(degreesMultiplier*headset.getTasteIndex()));
+      image(tasteDialImage,0,0);
+      popMatrix();
+    }
     
     // shows taste index as a percentage
     /*

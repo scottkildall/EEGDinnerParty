@@ -137,10 +137,10 @@ class DebugDisplay {
     headsets = _headsets;
     
     displays = new DebugHeadsetDisplay[numDevices];
-    displays[0] = new DebugHeadsetDisplay( 50, 50, "red");
-    displays[1] = new DebugHeadsetDisplay( 1000, 50, "green");
-    displays[2] = new DebugHeadsetDisplay( 50, 550, "blue");
-    displays[3] = new DebugHeadsetDisplay( 1000, 550, "yellow");
+    displays[0] = new DebugHeadsetDisplay( 50, 50, 132, 18, 37);
+    displays[1] = new DebugHeadsetDisplay( 1000, 50, 89, 81, 148);
+    displays[2] = new DebugHeadsetDisplay( 50, 550, 255, 152, 33);
+    displays[3] = new DebugHeadsetDisplay( 1000, 550, 70, 173, 0);
   }
   
   //-- draw 
@@ -199,10 +199,12 @@ class DebugHeadsetDisplay {
   float [] waveData;
   
   //-- color is a name, like "yellow", "red", "green", blue"
-  DebugHeadsetDisplay(int x, int y, String colorStr ) {
+  DebugHeadsetDisplay(int x, int y, int _r, int _g, int _b ) {
     drawX = x;
     drawY = y;
-    setColor(colorStr);
+    r = _r;
+    g = _g;
+    b = _b;
     
     waveData = new float[4];
   }
@@ -210,40 +212,18 @@ class DebugHeadsetDisplay {
   //-- draw 
   public void draw(MuseHeadset headset) {
     drawFrame();
-    //drawDeviceStats(headset);
     
     noStroke();
-   
+    
+    drawDeviceStats(headset);
+    drawHorseshoe(headset);
+    
+    
     drawWaveBalls(prepareDrawAlpha(headset));
     drawWaveBalls(prepareDrawBeta(headset));
     drawWaveBalls(prepareDrawDelta(headset));
     drawWaveBalls(prepareDrawGamma(headset));
-    drawWaveBalls(prepareDrawTheta(headset));
-    drawHorseshoe(headset);
-    
-//    if (uiDrawBattery)
-//      drawBatteryLife(headset);
-      
-      
-    drawPacketMS(headset);
-  }
-  
-  
-  //---- private functions
-  //-- set internal r,b,g values
-  private void setColor(String colorStr) {
-    if( colorStr.equals("red") ) {
-      r = 255; g = 0; b = 0;
-    }
-    else if( colorStr.equals("green") ) {
-      r = 0; g = 255; b = 0;
-    }
-    else if( colorStr.equals("blue") ) {
-      r = 0; g = 0; b = 255;
-    }
-    else if( colorStr.equals("yellow") ) {
-      r = 255; g = 255; b = 0;
-    }
+    drawWaveBalls(prepareDrawTheta(headset));  
   }
   
   private void drawFrame() {
@@ -254,46 +234,7 @@ class DebugHeadsetDisplay {
   }
   
   
-  // Main draw function for each device
-  private void drawDeviceStats(MuseHeadset headset) { 
-    if( uiDrawForeheadConnection ) {
-      drawForeheadConnection(headset);
-      drawGoodConnection(headset);
-    }
-  }
   
-  
-   
-
-  // Single indication as to whether or not the forehead is 'connected'
-  private void drawForeheadConnection(MuseHeadset headset) {
-    int diameter = 10;
-    noStroke();
-    /*
-    if( headset.touchingForehead == 0 )
-      fill(255,0,0);
-    else {
-      fill(0,255,0);
-    }
-    ellipse( drawX + diameter, drawY + diameter, diameter, diameter);  // Draw gray ellipse using CENTER mode
-    */
-  }
-
-  // 4 connections for touching various points on forehead
-  private void drawGoodConnection(MuseHeadset headset) {
-    int diameter = 10;
-    noStroke();
-    /*
-    for( int i = 0; i <4; i++ ) {
-      if( headset.good[i] == 0 )
-        fill(255,0,0);
-      else 
-        fill(0,255,0);
-      
-      ellipse(drawX+diameter + diameter * (i*2), drawY + diameter*3, diameter, diameter);  // Draw gray ellipse using CENTER mode
-    }  
-    */
-  }
 
   // converts long decimal, i.e. .231 to float
   private String floatToPct(float n) {
@@ -398,64 +339,45 @@ class DebugHeadsetDisplay {
      textSize(12);
      
      for( int i = 0; i < 4; i++ ) 
-       text( headset.horseshoeStrings[i], drawX + 30 + (i * 50), drawY + 30); 
+       text( headset.horseshoeStrings[i], drawX + 30 + (i * 50), drawY + 60); 
   }
  
  
-/*
-  // Draws mellow life as relative position, index = inde into array of headset
-  void drawTheta(MuseHeadset headset) {
-     int  diameter = 10;
-     float thetaX = drawX + 300;
-     float thetaY = 50 + drawY  + uiBallHeight;    // we will subtact from this:  -(float(uiBallHeight)*thetaRelative[i].mellow);
-     
-     stroke(15,245,145);
-     strokeWeight(1);
-     
-     fill(15,245,145);
-     
-     
-     float lastX = 0;
-     float lastY = 0;
-     
-     for( int i = 0; i < 4; i++ ) { 
-       float tx = thetaX + (i * (diameter*2));
-       float ty = thetaY - (float(uiBallHeight/2)*(headset.thetaRelative[i]/2));
-       ellipse(tx, ty, diameter, diameter);  // Draw gray ellipse using CENTER mode
-       
-        if( i > 0 ) {
-        line(lastX,lastY, tx, ty);
-        }
-        lastX = tx;
-        lastY = ty;
-        
-     }
-     
-      fill(200,200,200);
-      textSize(12);
-      //text( floatToPct(headset.mellow),mellowX + 20, mellowY+ 5); 
-  }
-*/
-/*
-  // Draws battery life as relative position, index = inde into array of headset
-  void drawBatteryLife(MuseHeadset headset) {
+  public void drawDeviceStats(MuseHeadset headset) {
      fill(255, 255, 255);
      noStroke();
-     textSize(18);
-     float batteryPct = headset.batteryPct;
-     String batteryStr = (batteryPct < 0) ? "---" :  str(headset.batteryPct)+"%";
-     text( batteryStr, drawX + uiWidth - 70, drawY + 30); 
+     textSize(14);
+     
+     long packetConnectionTime = 10000;  // how much time before we deem a device is disconnected
+     
+     String connectedStr = "Connected: ";
+     if( headset.lastPacketMS + packetConnectionTime > millis() )
+      connectedStr = connectedStr + "YES";
+     else
+       connectedStr = connectedStr + "NO";
+       
+     String touchingStr = "Touching Forehead: ";
+     if( headset.isTouchingForehead() )
+       touchingStr = touchingStr + "YES";
+     else
+       touchingStr = touchingStr + "NO";
+     
+     text( connectedStr, drawX + 100 , drawY + 30); 
+     text( touchingStr, drawX + 250, drawY + 30); 
   }
-  */
-  public void drawPacketMS(MuseHeadset headset) {
+
+  ///REMOVE
+  /*
+  void drawPacketMS(MuseHeadset headset) {
     int elapsedMS = (millis() - headset.lastPacketTime);
-    float elapsedSec = PApplet.parseFloat(elapsedMS)/1000.0f;
+    float elapsedSec = float(elapsedMS)/1000.0;
     
     fill(255, 255, 255);
     noStroke();
     textSize(12);
     text( "elapsed: " + str(elapsedSec) + " secs", drawX + 20, drawY + uiHeight - 30); 
   }
+  */
 }
 /**
  * dinnerDisplay.pde
@@ -507,7 +429,9 @@ class DinnerDisplay {
     //-- allocate and initialize plotter
     float numMinutes = 5.0f;  // 1.0 is good for testing
     plotter = new Plotter(headsets, 162, 234 );
-    plotter.initialize( 1584, 344, numMinutes, 10, 5);
+    float numPixels = 1584;  // UI value
+    numPixels = 1500;  // better test value
+    plotter.initialize( numPixels, 344, numMinutes, 10, 5);
   }
   
   public void toggleHelperImage() {
@@ -521,8 +445,6 @@ class DinnerDisplay {
   public void draw() {
     background(255);    
     ellipseMode(CENTER);  // Set ellipseMode to CENTER
-    
-    
     
     if( helperImage != null && bDisplayHelperImage == true ) {
       imageMode(CORNER);
@@ -637,9 +559,11 @@ class DinnerHeadsetDisplay {
   
   //-- draw 
   public void draw(MuseHeadset headset) {
-    drawGraph();
-    drawTasteIndex();
-    drawTasteIndexLabels();
+    //if(headset.isTouchingForehead() ) {
+      drawGraph();
+      drawTasteIndex();
+      drawTasteIndexLabels();
+   // }
   }
   
   
@@ -648,12 +572,14 @@ class DinnerHeadsetDisplay {
     image(tasteBackgroundImage, tasteX, tasteY);
     image(iconImage, tasteX, tasteY + 130 );
     
-    // rotation code for the dial indicator
-    pushMatrix();
-    translate( tasteX,tasteY+80);
-    rotate(radians(degreesMultiplier*headset.getTasteIndex()));
-    image(tasteDialImage,0,0);
-    popMatrix();
+    if(headset.isTouchingForehead()) {
+      // rotation code for the dial indicator
+      pushMatrix();
+      translate( tasteX,tasteY+80);
+      rotate(radians(degreesMultiplier*headset.getTasteIndex()));
+      image(tasteDialImage,0,0);
+      popMatrix();
+    }
     
     // shows taste index as a percentage
     /*
@@ -709,13 +635,19 @@ class DinnerHeadsetDisplay {
  * Device name can be changed in SystemPrefs->Bluetooth
  */
  
+ 
+// globals for percentages
+float pctAlpha = .10f;
+float pctBeta = .30f;
+float pctDelta = .20f;
+float pctGamma = .10f;
+float pctTheta = .30f;
+
 class MuseHeadset {
   int port;
   OscP5 osc;
   
-  //int touchingForehead = 0;
-  //float batteryPct = -1.0;    // NO READING
-  //int[] good; // num sensors
+  int touchingForehead = 0;
   
   // These are "absolute" rather than relative values
   float [] alpha;
@@ -733,18 +665,20 @@ class MuseHeadset {
   float qGamma;
   float qTheta;
   
-  int lastPacketTime;
+  ///XXX: removeint lastPacketTime;
   
   float plotValue;
-  boolean bRandomMode;
+  boolean bRandomMode;    // XXX: we will remove this later
+  boolean bRandomTasteIndex;
   
   float tasteIndex;
+  float combinedQValue;
+  long lastPacketMS = 0;
   
   MuseHeadset(int thePort) {
     port = thePort;
     osc = new OscP5(this,port);
     
-    //good = new int[4];
     alpha = new float[4];
     beta = new float[4];
     delta = new float[4];
@@ -759,12 +693,25 @@ class MuseHeadset {
     
     zeroQWaveValues();
     
-    lastPacketTime = millis();
+    ///XXX: remove lastPacketTime = millis();
     
-    bRandomMode = true;
-    
+    ///XXX: clean
+    //if( thePort == 5007 )
+      bRandomMode = false;
+    //else
+     // bRandomMode = true;
+     
+     bRandomTasteIndex = true;
     resetData();
+    lastPacketMS = millis();
   }
+  
+  //-- called by draw() loop, will update internal data arrays
+  public Boolean isTouchingForehead() {
+      return (touchingForehead == 1);
+  }
+  
+  
   
   public float getTasteIndex() {
     return tasteIndex; 
@@ -772,20 +719,62 @@ class MuseHeadset {
   
   public void resetData() {
      tasteIndex = 50;
-     plotValue = random(0,100);
+     
+     if( bRandomMode )
+       plotValue = random(0,100);
+     else
+       plotValue = 50; 
+       
+     combinedQValue = 50;
   }
   
   public float getPlotValue() {
-     return plotValue; 
+    if( bRandomMode )
+       return plotValue;
+     else {
+       //println( "CombinedQ Value = " + str(combinedQValue));
+       
+       float newQValue = (qAlpha * pctAlpha) + (qBeta * pctBeta) + (qDelta * pctDelta) + (qGamma * pctGamma) + (qTheta * pctTheta);
+       
+       if( newQValue <  combinedQValue+1 &&  newQValue >  combinedQValue-1 )
+         combinedQValue = noiseFilter(newQValue);
+       
+       combinedQValue = checkMaxMin(newQValue,3.0f);
+      
+       //println( "return QValue = " + str(combinedQValue) );
+       return combinedQValue;
+     } 
   }
    
+   // makes sure we don't go over 100 or less than 0, does some randomization goodies
+   public float checkMaxMin(float qValue, float bumpRange) {
+      if( qValue > 100 )
+         qValue = 100 - random(.5f,bumpRange+.5f);  
+      else if( qValue < 0 )
+        qValue = 0 + random(.5f,bumpRange+.5f);
+        
+      return qValue;
+   }
+   
+   public float noiseFilter(float qValue) {
+     float filterRange = 2.0f;
+     float retValue = qValue + random(-filterRange,filterRange);
+     if( retValue < 0 )
+        retValue = 0 + random(.5f,filterRange+.5f);
+     else if( retValue > 100 )
+        retValue = 100 - random(.5f,filterRange+.5f);  
+        
+      return retValue;
+   }
+   
    public void nextPlotValue() {
-      if( bRandomMode ) {
-        plotValue = plotValue + random(-3,3);
+      if( bRandomTasteIndex && touchingForehead == 1) {
+        float randRange = 3.0f;
+        plotValue = plotValue + random(-randRange,randRange);
         if( plotValue < 0 )
-          plotValue = plotValue + random(-plotValue,3.5f);
+          plotValue = plotValue + random(-plotValue,randRange+.5f);
         else if( plotValue > 100 )
-          plotValue = plotValue - random((plotValue-100),3.5f);
+          plotValue = plotValue - random((plotValue-100),randRange+.5f);
           
         tasteIndex = tasteIndex + random(-1,1);
         if( tasteIndex < 0 )
@@ -796,22 +785,56 @@ class MuseHeadset {
    }
              
   public void zeroQWaveValues() {
-      qAlpha = 0.0f;
-      qBeta = 0.0f;
-      qDelta = 0.0f;
-      qGamma = 0.0f;
-      qTheta = 0.0f;
+      //-- set to reasonable defaults for these
+      qAlpha = 50.0f;
+      qBeta = 50.0f;
+      qDelta = 50.0f;
+      qGamma = 50.0f;
+      qTheta = 50.0f;
   }
   
   //-- based on horseshoe settings, will generate average qQave values
-  public float generateQWaveValue(float [] waveValues) {
+    // scale is -1.0 to 0?
+
+  public float generateQWaveValue(float [] waveValues, float previousQValue) {
+    float qValue = -10000;    // impossibly low number, set as flag
+    float divisor = 0;
+    
    
     for( int i = 0; i < 4; i++ ) {
-       // generate qValue here 
+      
+       if( horseshoeValues[i] == 1.0f ) {
+         qValue = map(waveValues[i],-1.0f,0.0f,0,100) * 9;    // 9x factor for a good connection
+         divisor = divisor + 8;
+       }
+       else if( horseshoeValues[i] == 2.0f ) {
+         qValue = map(waveValues[i],-1.0f,0.0f,0,100) * 3;    // 3x factor for a ok connection
+         divisor = divisor + 3;
+       }
+       else if( horseshoeValues[i] == 3.0f ) {
+         qValue =map(waveValues[i],-1.0f,0.0f,0,100) * 1;    // 1x factor for a bad connection
+         divisor = divisor + 1;
+       }
     }
-   
-   return 0.0f;
+    
+    if( qValue == -10000 ) {
+       float qRandRange = 1.0f;
+       qValue = previousQValue + random(-qRandRange,qRandRange);
+       if( qValue > 100 )
+         qValue =  previousQValue - random(qRandRange/2, qRandRange*2);
+       else if( qValue < 0 )
+         qValue =  previousQValue + random(qRandRange/2, qRandRange*2);
+    }
+    else {
+      qValue = qValue/divisor;
+      //println( "ACTUAL Q Value = " + str(qValue));
+     // println( "Divisor = " + str(divisor) );
+    }
+    
+   return qValue;
   }
+  
+
   public void generateHorseShoeStrings() {
     for( int i = 0; i < 4; i++ ) {
       if( horseshoeValues[i] == 4.0f )
@@ -839,7 +862,9 @@ class MuseHeadset {
       for( int i = 0; i < 4; i++ ) {
         alpha[i] = theOscMessage.get(i).floatValue();
       }
-      qAlpha = generateQWaveValue(alpha);
+      
+      //println( "ALPHA: " );
+      qAlpha = generateQWaveValue(alpha,qAlpha);  
     }
     
     // BETA (ABSOLUTE)
@@ -847,6 +872,9 @@ class MuseHeadset {
       for( int i = 0; i < 4; i++ ) {
         beta[i] = theOscMessage.get(i).floatValue();
       }
+      
+      //println( "BETA" );
+      qBeta = generateQWaveValue(beta,qBeta); 
     }
    
    // DELTA (ABSOLUTE)
@@ -854,6 +882,9 @@ class MuseHeadset {
       for( int i = 0; i < 4; i++ ) {
         delta[i] = theOscMessage.get(i).floatValue();
       }
+      //println( "DETLA :" );
+       qDelta = generateQWaveValue(delta,qDelta);
+       
     }
     
     // GAMMA (ABSOLUTE)
@@ -861,6 +892,9 @@ class MuseHeadset {
       for( int i = 0; i < 4; i++ ) {
         gamma[i] = theOscMessage.get(i).floatValue();
       }
+      
+      //println( "GAMMA: " );
+      qGamma = generateQWaveValue(gamma,qGamma); 
     }
     
     // THETA (ABSOLUTE)
@@ -868,6 +902,9 @@ class MuseHeadset {
       for( int i = 0; i < 4; i++ ) {
         theta[i] = theOscMessage.get(i).floatValue();
       }
+      
+      //println( "THETA: " );
+      qTheta = generateQWaveValue(theta,qTheta); 
     }
     
     // HORSESHOE
@@ -878,31 +915,15 @@ class MuseHeadset {
       generateHorseShoeStrings();
     }
     
-    ///REMOVE (LATER)
-    /*
-    else if(  addrPattern.equals("/muse/elements/touching_forehead") ) {
+    // TOUCHING FOREHEAD
+    if(  addrPattern.equals("/muse/elements/touching_forehead") ) {
       //println("touching forehead typetag: "+ theOscMessage.typetag());
       touchingForehead = theOscMessage.get(0).intValue();
-    }  
-    else if( addrPattern.equals("/muse/elements/is_good") ) {
-      //println("touching forehead typetag: "+ theOscMessage.typetag());
-      for(int i = 0; i <4;i++ ) {
-        good[i] = theOscMessage.get(i).intValue();
-      }
-    }  
-    else if( addrPattern.equals("/muse/batt")) {
-        // State of Charge, Divide this by 100 to get percentage of charge remaining, (e.g. 5367 is 53.67%)
-       batteryPct = float(theOscMessage.get(0).intValue()) / 100.0;
-        //println(batteryPct);
-   }
-   else if( addrPattern.equals("/test"))  {
-     println("TEST @ Port: " + str(port));
-      //println( "message = " + str(theOscMessage.get(0).intValue()));
+      //println( "TOUCHING FOREHEAD = " + str(touchingForehead) );
       
-   }
-   */
-   // last communication, whatever it might be
-   lastPacketTime = millis();
+    } 
+    
+    lastPacketMS = millis();
   }
 }
 /**
@@ -946,6 +967,7 @@ class Plotter {
   
   //-- alloc this
   float [][] plotData;
+  Boolean [][] touchingForehead;
   
   float lastMillis;
  
@@ -985,6 +1007,7 @@ class Plotter {
     
     // Allocate receptors for pixels
     plotData = new float[numHeadsets][numPixels];
+    touchingForehead = new Boolean[numHeadsets][numPixels];
     numPlottedPixels = 0;
     
     //-- how much space between each horizontal line, used in drawAxes()
@@ -1114,9 +1137,29 @@ class Plotter {
   }
   
   public void drawPlot(int headsetNum) {
+    //-- point plots
+    /*
      for( int i = 0; i < numPlottedPixels; i++ ) {
        point( drawX + i, drawY + h - plotData[headsetNum][i]);
      }
+     */
+     float lastX = 0;
+     float lastY = 0;
+     
+      for( int i = 0; i < numPlottedPixels; i = i + 1 ) {
+        float x = drawX + i;
+          float y = drawY + h - plotData[headsetNum][i];
+          
+        if( i > 0 ) {
+          if( touchingForehead[headsetNum][i] )
+            line( lastX, lastY, x, y );
+          
+          
+        }
+        lastX = x;
+        lastY = y;
+     }
+     
   }
   
    private void updatePlot() {
@@ -1129,7 +1172,9 @@ class Plotter {
          
          for( int i = 0; i < numHeadsets; i++ ) {
              plotData[i][numPlottedPixels] = headsets[i].getPlotValue() * vPlotMultiplier;
+             touchingForehead[i][numPlottedPixels] = headsets[i].isTouchingForehead();
              headsets[i].nextPlotValue(); 
+             
           }
           
          // prevent overflow, in case plot pixels exceeds buffer

@@ -48,7 +48,9 @@ class DinnerDisplay {
     //-- allocate and initialize plotter
     float numMinutes = 5.0f;  // 1.0 is good for testing
     plotter = new Plotter(headsets, 162, 234 );
-    plotter.initialize( 1584, 344, numMinutes, 10, 5);
+    float numPixels = 1584;  // UI value
+    numPixels = 1500;  // better test value
+    plotter.initialize( numPixels, 344, numMinutes, 10, 5);
   }
   
   public void toggleHelperImage() {
@@ -62,8 +64,6 @@ class DinnerDisplay {
   public void draw() {
     background(255);    
     ellipseMode(CENTER);  // Set ellipseMode to CENTER
-    
-    
     
     if( helperImage != null && bDisplayHelperImage == true ) {
       imageMode(CORNER);

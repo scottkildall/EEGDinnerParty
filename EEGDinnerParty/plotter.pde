@@ -39,6 +39,7 @@ class Plotter {
   
   //-- alloc this
   float [][] plotData;
+  Boolean [][] touchingForehead;
   
   float lastMillis;
  
@@ -78,6 +79,7 @@ class Plotter {
     
     // Allocate receptors for pixels
     plotData = new float[numHeadsets][numPixels];
+    touchingForehead = new Boolean[numHeadsets][numPixels];
     numPlottedPixels = 0;
     
     //-- how much space between each horizontal line, used in drawAxes()
@@ -221,8 +223,9 @@ class Plotter {
           float y = drawY + h - plotData[headsetNum][i];
           
         if( i > 0 ) {
+          if( touchingForehead[headsetNum][i] )
+            line( lastX, lastY, x, y );
           
-          line( lastX, lastY, x, y );
           
         }
         lastX = x;
@@ -241,7 +244,9 @@ class Plotter {
          
          for( int i = 0; i < numHeadsets; i++ ) {
              plotData[i][numPlottedPixels] = headsets[i].getPlotValue() * vPlotMultiplier;
+             touchingForehead[i][numPlottedPixels] = headsets[i].isTouchingForehead();
              headsets[i].nextPlotValue(); 
+             
           }
           
          // prevent overflow, in case plot pixels exceeds buffer

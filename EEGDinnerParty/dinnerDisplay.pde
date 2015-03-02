@@ -65,8 +65,6 @@ class DinnerDisplay {
     background(255);    
     ellipseMode(CENTER);  // Set ellipseMode to CENTER
     
-    
-    
     if( helperImage != null && bDisplayHelperImage == true ) {
       imageMode(CORNER);
       tint(255,128);

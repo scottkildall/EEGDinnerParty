@@ -41,10 +41,12 @@ class DebugHeadsetDisplay {
   float [] waveData;
   
   //-- color is a name, like "yellow", "red", "green", blue"
-  DebugHeadsetDisplay(int x, int y, String colorStr ) {
+  DebugHeadsetDisplay(int x, int y, int _r, int _g, int _b ) {
     drawX = x;
     drawY = y;
-    setColor(colorStr);
+    r = _r;
+    g = _g;
+    b = _b;
     
     waveData = new float[4];
   }
@@ -52,40 +54,18 @@ class DebugHeadsetDisplay {
   //-- draw 
   public void draw(MuseHeadset headset) {
     drawFrame();
-    //drawDeviceStats(headset);
     
     noStroke();
-   
+    
+    drawDeviceStats(headset);
+    drawHorseshoe(headset);
+    
+    
     drawWaveBalls(prepareDrawAlpha(headset));
     drawWaveBalls(prepareDrawBeta(headset));
     drawWaveBalls(prepareDrawDelta(headset));
     drawWaveBalls(prepareDrawGamma(headset));
-    drawWaveBalls(prepareDrawTheta(headset));
-    drawHorseshoe(headset);
-    
-//    if (uiDrawBattery)
-//      drawBatteryLife(headset);
-      
-      
-    drawPacketMS(headset);
-  }
-  
-  
-  //---- private functions
-  //-- set internal r,b,g values
-  private void setColor(String colorStr) {
-    if( colorStr.equals("red") ) {
-      r = 255; g = 0; b = 0;
-    }
-    else if( colorStr.equals("green") ) {
-      r = 0; g = 255; b = 0;
-    }
-    else if( colorStr.equals("blue") ) {
-      r = 0; g = 0; b = 255;
-    }
-    else if( colorStr.equals("yellow") ) {
-      r = 255; g = 255; b = 0;
-    }
+    drawWaveBalls(prepareDrawTheta(headset));  
   }
   
   private void drawFrame() {
@@ -96,46 +76,7 @@ class DebugHeadsetDisplay {
   }
   
   
-  // Main draw function for each device
-  private void drawDeviceStats(MuseHeadset headset) { 
-    if( uiDrawForeheadConnection ) {
-      drawForeheadConnection(headset);
-      drawGoodConnection(headset);
-    }
-  }
   
-  
-   
-
-  // Single indication as to whether or not the forehead is 'connected'
-  private void drawForeheadConnection(MuseHeadset headset) {
-    int diameter = 10;
-    noStroke();
-    /*
-    if( headset.touchingForehead == 0 )
-      fill(255,0,0);
-    else {
-      fill(0,255,0);
-    }
-    ellipse( drawX + diameter, drawY + diameter, diameter, diameter);  // Draw gray ellipse using CENTER mode
-    */
-  }
-
-  // 4 connections for touching various points on forehead
-  private void drawGoodConnection(MuseHeadset headset) {
-    int diameter = 10;
-    noStroke();
-    /*
-    for( int i = 0; i <4; i++ ) {
-      if( headset.good[i] == 0 )
-        fill(255,0,0);
-      else 
-        fill(0,255,0);
-      
-      ellipse(drawX+diameter + diameter * (i*2), drawY + diameter*3, diameter, diameter);  // Draw gray ellipse using CENTER mode
-    }  
-    */
-  }
 
   // converts long decimal, i.e. .231 to float
   private String floatToPct(float n) {
@@ -240,55 +181,35 @@ class DebugHeadsetDisplay {
      textSize(12);
      
      for( int i = 0; i < 4; i++ ) 
-       text( headset.horseshoeStrings[i], drawX + 30 + (i * 50), drawY + 30); 
+       text( headset.horseshoeStrings[i], drawX + 30 + (i * 50), drawY + 60); 
   }
  
  
-/*
-  // Draws mellow life as relative position, index = inde into array of headset
-  void drawTheta(MuseHeadset headset) {
-     int  diameter = 10;
-     float thetaX = drawX + 300;
-     float thetaY = 50 + drawY  + uiBallHeight;    // we will subtact from this:  -(float(uiBallHeight)*thetaRelative[i].mellow);
-     
-     stroke(15,245,145);
-     strokeWeight(1);
-     
-     fill(15,245,145);
-     
-     
-     float lastX = 0;
-     float lastY = 0;
-     
-     for( int i = 0; i < 4; i++ ) { 
-       float tx = thetaX + (i * (diameter*2));
-       float ty = thetaY - (float(uiBallHeight/2)*(headset.thetaRelative[i]/2));
-       ellipse(tx, ty, diameter, diameter);  // Draw gray ellipse using CENTER mode
-       
-        if( i > 0 ) {
-        line(lastX,lastY, tx, ty);
-        }
-        lastX = tx;
-        lastY = ty;
-        
-     }
-     
-      fill(200,200,200);
-      textSize(12);
-      //text( floatToPct(headset.mellow),mellowX + 20, mellowY+ 5); 
-  }
-*/
-/*
-  // Draws battery life as relative position, index = inde into array of headset
-  void drawBatteryLife(MuseHeadset headset) {
+  void drawDeviceStats(MuseHeadset headset) {
      fill(255, 255, 255);
      noStroke();
-     textSize(18);
-     float batteryPct = headset.batteryPct;
-     String batteryStr = (batteryPct < 0) ? "---" :  str(headset.batteryPct)+"%";
-     text( batteryStr, drawX + uiWidth - 70, drawY + 30); 
+     textSize(14);
+     
+     long packetConnectionTime = 10000;  // how much time before we deem a device is disconnected
+     
+     String connectedStr = "Connected: ";
+     if( headset.lastPacketMS + packetConnectionTime > millis() )
+      connectedStr = connectedStr + "YES";
+     else
+       connectedStr = connectedStr + "NO";
+       
+     String touchingStr = "Touching Forehead: ";
+     if( headset.isTouchingForehead() )
+       touchingStr = touchingStr + "YES";
+     else
+       touchingStr = touchingStr + "NO";
+     
+     text( connectedStr, drawX + 100 , drawY + 30); 
+     text( touchingStr, drawX + 250, drawY + 30); 
   }
-  */
+
+  ///REMOVE
+  /*
   void drawPacketMS(MuseHeadset headset) {
     int elapsedMS = (millis() - headset.lastPacketTime);
     float elapsedSec = float(elapsedMS)/1000.0;
@@ -298,4 +219,5 @@ class DebugHeadsetDisplay {
     textSize(12);
     text( "elapsed: " + str(elapsedSec) + " secs", drawX + 20, drawY + uiHeight - 30); 
   }
+  */
 }
