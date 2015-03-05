@@ -17,11 +17,11 @@
  
  
 // globals for percentages
-float pctAlpha = .10;
-float pctBeta = .30;
-float pctDelta = .20;
-float pctGamma = .10;
-float pctTheta = .30;
+float pctAlpha = .05;  // spiky
+float pctBeta = .40;    // looks good
+float pctDelta = .40;    // also good
+float pctGamma = .05; // spiky
+float pctTheta = .10;  // ok
 
 class MuseHeadset {
   int port;
@@ -84,6 +84,14 @@ class MuseHeadset {
      bRandomTasteIndex = true;
     resetData();
     lastPacketMS = millis();
+  }
+  
+  void setPctWaves(float _pctAlpha, float _pctBeta, float _pctDelta, float _pctGamma, float _pctTheta) {
+      pctAlpha = _pctAlpha;
+      pctBeta = _pctBeta;
+      pctDelta = _pctDelta;
+      pctGamma = _pctGamma;
+      pctTheta = _pctTheta;
   }
   
   //-- called by draw() loop, will update internal data arrays

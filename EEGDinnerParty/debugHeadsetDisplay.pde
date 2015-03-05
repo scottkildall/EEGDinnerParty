@@ -20,7 +20,7 @@ Boolean uiDrawBattery = false;
 Boolean uiDrawForeheadConnection = true;    // headset
 
 //-- don't change these
-static int uiHeight = 450;
+static int uiHeight = 350;
 static int uiWidth = 900;
 
 static int uiBallHeight = 300;
@@ -207,17 +207,4 @@ class DebugHeadsetDisplay {
      text( connectedStr, drawX + 100 , drawY + 30); 
      text( touchingStr, drawX + 250, drawY + 30); 
   }
-
-  ///REMOVE
-  /*
-  void drawPacketMS(MuseHeadset headset) {
-    int elapsedMS = (millis() - headset.lastPacketTime);
-    float elapsedSec = float(elapsedMS)/1000.0;
-    
-    fill(255, 255, 255);
-    noStroke();
-    textSize(12);
-    text( "elapsed: " + str(elapsedSec) + " secs", drawX + 20, drawY + uiHeight - 30); 
-  }
-  */
 }
