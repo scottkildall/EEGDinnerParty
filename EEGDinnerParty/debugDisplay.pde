@@ -40,23 +40,27 @@ class DebugDisplay {
     textAlign(LEFT);
     textSize(14);
     fill(255,255,255);
-    text( "Port Num: " + str(prefs.portNum), 100, 40 );
     
+    float waveXOffset = 120;
+    
+    text( "Port Num: " + str(prefs.portNum), 100, 40 );
+    text( "Save Data: " + prefs.saveData, 100+waveXOffset, 40 );
     float waveY = 80;
     float waveX = 100;
-    float waveXOffset = 120;
-     text( "Alpha Pct: " + str(prefs.pctAlpha * 100) + "%", waveX, waveY );
+    
+     //text( "Alpha Pct: " + str(prefs.pctAlpha * 100) + "%", waveX, waveY );
+     text( "Alpha Pct: " + String.format("%.0f",prefs.pctAlpha * 100) + "%", waveX, waveY );
      waveX = waveX + waveXOffset;
-     text( "Beta Pct: " + str(prefs.pctBeta * 100) + "%", waveX, waveY );
+     text( "Beta Pct: " + String.format("%.0f",prefs.pctBeta * 100) + "%", waveX, waveY );
       waveX = waveX + waveXOffset;
-     text( "Delta Pct: " + str(prefs.pctDelta * 100) + "%", waveX, waveY );
+     text( "Delta Pct: " + String.format("%.0f",prefs.pctDelta * 100) + "%", waveX, waveY );
       waveX = waveX + waveXOffset;
-     text( "Gamma Pct: " + str(prefs.pctGamma * 100) + "%", waveX, waveY );
+     text( "Gamma Pct: " +  String.format("%.0f",prefs.pctGamma * 100) + "%", waveX, waveY );
       waveX = waveX + waveXOffset;
-     text( "Theta Pct: " + str(prefs.pctTheta * 100) + "%", waveX, waveY );
+     text( "Theta Pct: " + String.format("%.0f",prefs.pctTheta * 100) + "%", waveX, waveY );
       waveX = waveX + waveXOffset;
       float totalPct = prefs.pctAlpha + prefs.pctBeta + prefs.pctDelta + prefs.pctGamma + prefs.pctTheta;
-     text( "Total Pct: " + str(totalPct * 100) + "%", waveX, waveY );
+     text( "Total Pct: " + String.format("%.0f",totalPct * 100) + "%", waveX, waveY );
      
   }
 }

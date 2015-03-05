@@ -10,10 +10,16 @@ class Plotter {
   MuseHeadset [] headsets;
   int numHeadsets;
   
+  Boolean bSaveData;
+  long saveDataTimerDuration;
+  int numSavedDataSamples;
+  int saveDataBufferSize;
+  
   Boolean bRunning = false;
   int numPlottedPixels;   // how many pixels we have plotted on the screen, we use this for drawing
   Timer plotTimer;    // this should be the duration of the dinner party
   Timer pixelTimer;    // this will get called for every pixel that we plot
+  Timer saveDataTimer;    // for JSON data output
   
   float drawX;
   float drawY;
@@ -32,7 +38,6 @@ class Plotter {
   
   float hLabelsOffset;  // how much horziontal space
   String [] hLabels;      // vertical labels, for BBQ Affinity
-  
 
   PFont axesTextFont;
   PFont axesNumbersFont;
@@ -41,15 +46,36 @@ class Plotter {
   float [][] plotData;
   Boolean [][] touchingForehead;
   
+  
   float lastMillis;
  
+   // saving data
+   DataSample [][] dataSamples;
+   Boolean [] headsetsOn;
+   DataSample [][] outputDataSamples;
+   
+   RecordSavedSession savedSession;
+   String savePath;
+   
   //-- constructor, mostly empty
-  Plotter(MuseHeadset [] _headsets, float _drawX, float _drawY) {
+  Plotter(MuseHeadset [] _headsets, float _drawX, float _drawY, Boolean _bSaveData, String _savePath) {
       headsets = _headsets;
       numHeadsets = headsets.length;
       drawX = _drawX;
       drawY = _drawY;
+      bSaveData = _bSaveData;
+      savePath = new String(_savePath);
       
+      saveDataTimerDuration = (2*1000); // 2 seconds
+      
+      ///XXX: remove
+      /*
+      if( bSaveData == true )
+        println( "SAVING DATA");
+     else
+       println("NO SAVE DATA");
+       */
+       
       numPlottedPixels = 0;
       plotTimer = null;
       
@@ -57,7 +83,6 @@ class Plotter {
       axesTextFont = createFont("Arial", 28.3 );  
       axesNumbersFont = createFont("Arial", 14 );  //-- XXX: this needs to be updated
   }
-  
   
   //-- must be called before start(), we pack the initialization code here, mostly for legibility
   //-- duration is in minutes and we will subdivide internally
@@ -137,6 +162,21 @@ class Plotter {
     println( "plotter.pixelTimerDuration = " + str(pixelTimerDuration) );
     
     pixelTimer = new Timer(pixelTimerDuration);
+    
+    saveDataTimer = new Timer(saveDataTimerDuration);
+    
+    numSavedDataSamples = 0;
+     println( "pixeltimerduration = " + str(pixelTimerDuration) );
+      println( "saveDataTimerDuration = " + str(saveDataTimerDuration) );
+    saveDataBufferSize = int(duration/saveDataTimerDuration);
+    println( "savedatabuffersize = " + str(saveDataBufferSize) );
+    if( bSaveData )
+      allocateSaveDataBuffers(saveDataBufferSize);
+  
+  }
+  
+  Boolean isPlotting() {
+    return bRunning;
   }
   
   //-- begins a new plot: initializes plotter, clears old values
@@ -150,9 +190,25 @@ class Plotter {
     println( "start millis() = " + millis() );
     plotTimer.start();
     pixelTimer.start();
+    if( bSaveData ) {
+      //-- check headsets on for each on
+      for(int i = 0; i < numHeadsets; i++ )
+        headsetsOn[i] = headsets[i].isTouchingForehead();  
+      saveDataTimer.start();
+    }
     
+
     bRunning = true;
   }  
+  
+  void finish() {
+      bRunning = false;
+      if( bSaveData ) {
+        copySaveDataBuffers();
+        printSavedData(); 
+        writeSavedData();
+      }     
+  }
   
   void clear() {
     println( "CLEAR");
@@ -256,14 +312,169 @@ class Plotter {
        if( plotTimer.expired()) {
            println("DONE: Plot time expired");
            println("pixeltimer, num Plotted pixels: " + str(numPlottedPixels) );
-           bRunning = false;
+           
            println( "end millis() = " + millis() );
+           finish();
+           
        }
-     }
+       
+       if( bSaveData && saveDataTimer.expired() ) {
+          if( bSaveData && saveDataTimer.expired() ) {
+             saveDataSample(numSavedDataSamples);
+             if( numSavedDataSamples < saveDataBufferSize ) {
+               numSavedDataSamples = numSavedDataSamples + 1;
+               saveDataTimer.start();
+             }
+          }
+       }
+      }
    }
-   
-   
+
+
+public void allocateSaveDataBuffers(int dataBufferSize) {
+  println("ALLOCATING DATA BUFFERS, size = " + str(dataBufferSize));
+     dataSamples = new DataSample[numHeadsets][dataBufferSize];
+     for( int i = 0; i < numHeadsets; i++ ) {
+        for( int j = 0; j < dataBufferSize; j++ )
+           dataSamples[i][j] = new DataSample();
+     }
+     headsetsOn = new Boolean[numHeadsets];
+}
+
+//-- makes a duplciate of save data buffers, which we use for output
+//-- relay on the instance var: numSavedDataSamples
+public void copySaveDataBuffers() {
+  int numActiveHeadsets = 0;
+  for( int i = 0; i < numHeadsets; i++ ) {
+     if( headsetsOn[i] )
+       numActiveHeadsets = numActiveHeadsets + 1;
+  }
+  println( "NUM ACTIVE HEADSETS: " + str(numActiveHeadsets) );
+  
+  savedSession = new RecordSavedSession();
+  savedSession.timestamp = getUnixTimestamp();
+  savedSession.savedData = new RecordSavedData[numActiveHeadsets];
+  
+  int headsetIndex = 0;  // for active headset count
+  for( int i = 0; i < numHeadsets; i++ ) {
+     if( headsetsOn[i] == false )
+       continue;
+       
+     savedSession.savedData[headsetIndex] = new RecordSavedData();
+     savedSession.savedData[headsetIndex].headsetName = headsets[i].getHeadsetName();
+     savedSession.savedData[headsetIndex].data = new DataSample[numSavedDataSamples];
+      for( int j = 0; j < numSavedDataSamples; j++ ) {
+        
+           savedSession.savedData[headsetIndex].data[j] = new DataSample();
+           //REMOVE
+           /*
+           println( "MS COPY = " + str(dataSamples[i][j].ms) );
+           println( "MS SAVED = " + str(savedSession.savedData[i].data[j].ms) );
+           */
+           savedSession.savedData[headsetIndex].data[j].ms = dataSamples[i][j].ms;
+           savedSession.savedData[headsetIndex].data[j].alpha = dataSamples[i][j].alpha;
+           savedSession.savedData[headsetIndex].data[j].beta = dataSamples[i][j].beta;
+           savedSession.savedData[headsetIndex].data[j].delta = dataSamples[i][j].delta;
+           savedSession.savedData[headsetIndex].data[j].gamma = dataSamples[i][j].gamma;
+           savedSession.savedData[headsetIndex].data[j].theta = dataSamples[i][j].theta;
+      }
+      
+      headsetIndex = headsetIndex + 1;
+  }
+  
+  /*
+  // Allocate
+  outputDataSamples = new DataSample[numHeadsets][numSavedDataSamples];
+  for( int i = 0; i < numHeadsets; i++ ) {
+        for( int j = 0; j < numSavedDataSamples; j++ )
+           outputDataSamples[i][j] = new DataSample();
+   }
+  
+  // Copy
+  for( int i = 0; i < numHeadsets; i++ ) {
+        for( int j = 0; j < numSavedDataSamples; j++ )
+           outputDataSamples[i][j] = dataSamples[i][j];
+   }
+   */
+}
+
+private void saveDataSample(int index) { 
+  if( index > (saveDataBufferSize-1) ) {
+    println( "Overflow, not saving data samples" );
+    println( "Index = " + str(index) );
+    println( "numSavedDataSamples = " + str(numSavedDataSamples) ); 
+   return;
+  }
+    
+  println( "Saving Data Sample at index: " + str(index) );
+  for( int i = 0; i < numHeadsets; i++ ) {
+    // this works
+    /*
+    if( headsetsOn[i] )
+      println( "HEADSET ON: " + str(i) );
+    else
+      println( "HEADSET OFF: " + str(i) );
+    */
+    
+    if( headsetsOn[i] ) {
+       dataSamples[i][index].ms = (index+1) * saveDataTimerDuration;
+       dataSamples[i][index].alpha = headsets[i].getAlpha();
+       dataSamples[i][index].beta = headsets[i].getBeta();
+       dataSamples[i][index].delta = headsets[i].getDelta();
+       dataSamples[i][index].gamma = headsets[i].getGamma();
+       dataSamples[i][index].theta = headsets[i].getTheta();
+    }
+  }
+}
+
+private void printSavedData() {
+  for( int i = 0; i < numHeadsets; i++ ) {
+  
+    
+    if( headsetsOn[i] ) {
+      println( "--------------------------------" );
+      println( "HEADSET: " + headsets[i].getHeadsetName() + ":" ); 
+      for( int j = 0; j < numSavedDataSamples; j++ ) {
+        
+       println( "time: " + str(dataSamples[i][j].ms) );
+       println( "alpha: " + str(dataSamples[i][j].alpha) );
+       println( "beta: " + str(dataSamples[i][j].beta) );
+       println( "delta: " + str(dataSamples[i][j].delta) );
+       println( "gamma: " + str(dataSamples[i][j].gamma) );
+       println( "theta: " + str(dataSamples[i][j].theta) );
+       println( "--" );
+      }
+      println( "--------------------------------" );
+    }
+    else {
+      println( "--------------------------------" );
+       println( "Headest: " + headsets[i].getHeadsetName() + " Not connected " ); 
+       println( "--------------------------------" );
+    }
+  }
+} 
+
+//-- note: savePath = "" if local
+  
+private void writeSavedData() {
+  Gson gson = new GsonBuilder().serializeNulls().create();
+  
+  //String path = "/Users/edp_2/Dropbox/EEGDinnerParty/";
+  //String path = "outputs/";
+  
+  String ts = String.format("%d",getUnixTimestamp());
+  PrintWriter writer = createWriter(savePath + "data_" +  ts + ".json");
+  writer.println(gson.toJson(savedSession));
+  writer.flush();
+  writer.close();
+} 
+
+private long getUnixTimestamp() {
+    Date d = new Date();
+  return d.getTime()/1000; 
+}
 }
   
+
   
  

@@ -45,8 +45,6 @@ class MuseHeadset {
   float qGamma;
   float qTheta;
   
-  ///XXX: removeint lastPacketTime;
-  
   float plotValue;
   boolean bRandomMode;    // XXX: we will remove this later
   boolean bRandomTasteIndex;
@@ -54,10 +52,12 @@ class MuseHeadset {
   float tasteIndex;
   float combinedQValue;
   long lastPacketMS = 0;
+  String headsetName;  // used for data output
   
-  MuseHeadset(int thePort) {
+  MuseHeadset(int thePort, String _headsetName) {
     port = thePort;
     osc = new OscP5(this,port);
+    headsetName = new String(_headsetName);
     
     alpha = new float[4];
     beta = new float[4];
@@ -86,6 +86,10 @@ class MuseHeadset {
     lastPacketMS = millis();
   }
   
+  String getHeadsetName() {
+    return headsetName;
+  }
+  
   void setPctWaves(float _pctAlpha, float _pctBeta, float _pctDelta, float _pctGamma, float _pctTheta) {
       pctAlpha = _pctAlpha;
       pctBeta = _pctBeta;
@@ -98,8 +102,6 @@ class MuseHeadset {
   Boolean isTouchingForehead() {
       return (touchingForehead == 1);
   }
-  
-  
   
   float getTasteIndex() {
     return tasteIndex; 
@@ -132,6 +134,22 @@ class MuseHeadset {
        //println( "return QValue = " + str(combinedQValue) );
        return combinedQValue;
      } 
+  }
+  
+  float getAlpha() {
+    return qAlpha;
+  }
+  float getBeta() {
+    return qBeta;
+  }
+  float getDelta() {
+    return qDelta;
+  }
+  float getGamma() {
+    return qGamma;
+  }
+  float getTheta() {
+    return qTheta;
   }
    
    // makes sure we don't go over 100 or less than 0, does some randomization goodies
@@ -188,20 +206,23 @@ class MuseHeadset {
     float qValue = -10000;    // impossibly low number, set as flag
     float divisor = 0;
     
-   
+    float goodDivisor = 7;
+    float okDivisor = 3;
+    float badDivisor = 1;
+    
     for( int i = 0; i < 4; i++ ) {
       
        if( horseshoeValues[i] == 1.0 ) {
-         qValue = map(waveValues[i],-1.0,0.0,0,100) * 9;    // 9x factor for a good connection
-         divisor = divisor + 8;
+         qValue = map(waveValues[i],-1.0,0.0,0,100) * goodDivisor;    // 9x factor for a good connection
+         divisor = divisor + goodDivisor;
        }
        else if( horseshoeValues[i] == 2.0 ) {
-         qValue = map(waveValues[i],-1.0,0.0,0,100) * 3;    // 3x factor for a ok connection
-         divisor = divisor + 3;
+         qValue = map(waveValues[i],-1.0,0.0,0,100) * okDivisor;    // 3x factor for a ok connection
+         divisor = divisor + okDivisor;
        }
        else if( horseshoeValues[i] == 3.0 ) {
-         qValue =map(waveValues[i],-1.0,0.0,0,100) * 1;    // 1x factor for a bad connection
-         divisor = divisor + 1;
+         qValue =map(waveValues[i],-1.0,0.0,0,100) * badDivisor;    // 1x factor for a bad connection
+         divisor = divisor + badDivisor;
        }
     }
     
@@ -219,6 +240,12 @@ class MuseHeadset {
      // println( "Divisor = " + str(divisor) );
     }
     
+    // FAIL SAFE
+    if( qValue > 100 )
+      qValue = 0;
+    else if( qValue < 0 )
+      qValue = 0;
+     
    return qValue;
   }
   

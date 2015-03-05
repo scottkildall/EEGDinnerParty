@@ -8,6 +8,7 @@ import oscP5.*;
 import netP5.*;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import java.util.Date;
 
 MuseHeadset[] headsets;
 DebugDisplay debugDisplay;
@@ -26,7 +27,6 @@ void setup() {
   
   //savePrefs();
   loadPrefs();
-  
  
   frameRate(60);
 
@@ -34,13 +34,26 @@ void setup() {
   headsets = new MuseHeadset[numDevices];
   for( int i = 0; i < numDevices; i++ ) {
     int portNum = prefs.portNum + i;    // numbering starts at 5001 for 'muse1', etc
-    headsets[i] = new  MuseHeadset(portNum);
+    headsets[i] = new  MuseHeadset(portNum, getHeadsetName(i));
     headsets[i].setPctWaves(prefs.pctAlpha, prefs.pctBeta, prefs.pctDelta, prefs.pctGamma, prefs.pctTheta );
   }
   
   debugDisplay = new DebugDisplay(prefs,numDevices,headsets);
-  dinnerDisplay = new DinnerDisplay(numDevices,headsets);
+  dinnerDisplay = new DinnerDisplay(prefs,numDevices,headsets);
   dinnerDisplay.toggleHelperImage();
+}
+
+String getHeadsetName(int headsetNum) {
+    if( headsetNum == 0 )
+      return "Pig";
+    else if( headsetNum == 1 )
+     return "Martini";
+    else if( headsetNum == 2 )
+     return "Fire";
+   else if( headsetNum == 3 )
+     return "Beaker";
+    else
+      return "ERROR - getHeadsetName()";
 }
 
 void draw() {

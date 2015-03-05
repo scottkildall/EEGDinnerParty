@@ -154,7 +154,7 @@ class DebugHeadsetDisplay {
   // values[] should be an array of 4 elements, each such as headset.betaRelative, etc
   void drawWaveBalls(float startX) {
      int  diameter = 10;
-     float dy = 50 + drawY  + uiBallHeight;    // we will subtact from this:  -(float(uiBallHeight)*thetaRelative[i].mellow);
+     float dy = -50 + drawY  + uiBallHeight;    // we will subtact from this:  -(float(uiBallHeight)*thetaRelative[i].mellow);
      
      float lastX = 0;
      float lastY = 0;

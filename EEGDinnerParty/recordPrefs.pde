@@ -18,5 +18,7 @@ public class RecordPrefs {
   float pctDelta;
   float pctGamma;
   float pctTheta;
+  String saveData;
+  String savePath;  // if none or empty, save to local
 }
 

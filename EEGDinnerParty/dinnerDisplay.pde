@@ -5,6 +5,7 @@
 
 
 class DinnerDisplay {
+  RecordPrefs prefs;
   DinnerHeadsetDisplay[] displays;
   MuseHeadset [] headsets;
   int numDevices;
@@ -16,7 +17,8 @@ class DinnerDisplay {
   PShape graySwatch;
   
   //-- color is a name, like "yellow", "red", "green", blue"
-  DinnerDisplay(int _numDevices, MuseHeadset [] _headsets) {
+  DinnerDisplay(RecordPrefs _prefs,int _numDevices, MuseHeadset [] _headsets) {
+    prefs = _prefs;
     numDevices = _numDevices;
     headsets = _headsets;
     
@@ -47,7 +49,15 @@ class DinnerDisplay {
     
     //-- allocate and initialize plotter
     float numMinutes = 5.0f;  // 1.0 is good for testing
-    plotter = new Plotter(headsets, 162, 234 );
+    
+    Boolean bSaveData = false;
+    if( prefs.saveData != null && prefs.saveData.equals("true") ) 
+      bSaveData = true;
+    
+    if( prefs.savePath == null )
+      prefs.savePath = "";
+      
+    plotter = new Plotter(headsets, 162, 234, bSaveData, prefs.savePath );
     float numPixels = 1584;  // UI value
     numPixels = 1500;  // better test value
     plotter.initialize( numPixels, 344, numMinutes, 10, 5);
@@ -106,8 +116,12 @@ class DinnerDisplay {
   
   //-- we can also use this as a toggle button
   public void startPlot() {
-      plotter.clear();
-      plotter.start();
+      if( plotter.isPlotting() )
+        plotter.finish();
+      else { 
+        plotter.clear();
+        plotter.start();
+      }
   }
   
   //-- we can also use this as a toggle button
