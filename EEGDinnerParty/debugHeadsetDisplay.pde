@@ -75,9 +75,6 @@ class DebugHeadsetDisplay {
     rect(drawX, drawY, uiWidth, uiHeight);
   }
   
-  
-  
-
   // converts long decimal, i.e. .231 to float
   private String floatToPct(float n) {
      int rn = round(n *100);

@@ -119,6 +119,8 @@ class DinnerDisplay {
       if( plotter.isPlotting() )
         plotter.finish();
       else { 
+        for( int i = 0; i < numDevices; i++ ) 
+          headsets[i].resetData();
         plotter.clear();
         plotter.start();
       }

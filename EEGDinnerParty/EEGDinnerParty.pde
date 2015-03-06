@@ -36,6 +36,8 @@ void setup() {
     int portNum = prefs.portNum + i;    // numbering starts at 5001 for 'muse1', etc
     headsets[i] = new  MuseHeadset(portNum, getHeadsetName(i));
     headsets[i].setPctWaves(prefs.pctAlpha, prefs.pctBeta, prefs.pctDelta, prefs.pctGamma, prefs.pctTheta );
+    headsets[i].setTasteTopFilter(prefs.tasteIndexTopFilter);
+    headsets[i].setTasteBottomFilter(prefs.tasteIndexBottomFilter);
   }
   
   debugDisplay = new DebugDisplay(prefs,numDevices,headsets);
@@ -109,6 +111,8 @@ void reloadPrefs() {
   debugDisplay.setPrefs(prefs);
   for( int i = 0; i < numDevices; i++ ) {
     headsets[i].setPctWaves(prefs.pctAlpha, prefs.pctBeta, prefs.pctDelta, prefs.pctGamma, prefs.pctTheta );
+    headsets[i].setTasteTopFilter(prefs.tasteIndexTopFilter);
+    headsets[i].setTasteBottomFilter(prefs.tasteIndexBottomFilter);
   }
 }
 

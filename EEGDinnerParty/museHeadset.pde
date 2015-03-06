@@ -45,15 +45,19 @@ class MuseHeadset {
   float qGamma;
   float qTheta;
   
-  float plotValue;
+  ///float plotValue;
   boolean bRandomMode;    // XXX: we will remove this later
-  boolean bRandomTasteIndex;
+  ///boolean bRandomTasteIndex;
   
   float tasteIndex;
   float combinedQValue;
   long lastPacketMS = 0;
+  long numQValues;    // how many times we've done a combined QValue plot
   String headsetName;  // used for data output
   Boolean connected = true;
+  
+  float topFilter;
+  float bottomFilter;
   
   MuseHeadset(int thePort, String _headsetName) {
     port = thePort;
@@ -75,9 +79,21 @@ class MuseHeadset {
     zeroQWaveValues();
     
     bRandomMode = false; 
-     bRandomTasteIndex = true;
+    /// bRandomTasteIndex = false;
+    numQValues = 0;
     resetData();
     lastPacketMS = millis();
+    
+    topFilter = 3.0;
+    bottomFilter = 1.25;
+  }
+  
+  void setTasteTopFilter(float _topFilter) {
+    topFilter = _topFilter;
+  }
+  
+  void setTasteBottomFilter(float _bottomFilter) {
+    bottomFilter = _bottomFilter;
   }
   
   String getHeadsetName() {
@@ -111,21 +127,24 @@ class MuseHeadset {
   void resetData() {
      tasteIndex = 50;
      
+     /*
      if( bRandomMode )
        plotValue = random(0,100);
      else
        plotValue = 50; 
-       
+       */
      combinedQValue = 50;
   }
   
   float getPlotValue() {
+    numQValues = numQValues + 1;
+    
     if( connected == false && touchingForehead == 1 ) {
        bRandomMode = true;
     }
       
     if( bRandomMode )
-       return plotValue;
+       return randomizePlotValue();
      else {
        //println( "CombinedQ Value = " + str(combinedQValue));
        
@@ -133,14 +152,41 @@ class MuseHeadset {
        
        if( newQValue <  combinedQValue+1 &&  newQValue >  combinedQValue-1 )
          combinedQValue = noiseFilter(newQValue);
-       
-       combinedQValue = checkMaxMin(newQValue,3.0);
       
+       // println( "OLD TASTE INDEX: " + str(tasteIndex) );
+          tasteIndex += addVolatility(newQValue,combinedQValue);
+          tasteIndex = checkMaxMin(tasteIndex,3.0);
+         //  println( "NEW TASTE INDEX: " + str(tasteIndex) );
+           
+            combinedQValue = checkMaxMin(newQValue,3.0);
+       
        //println( "return QValue = " + str(combinedQValue) );
        return combinedQValue;
      } 
   }
   
+  //-- still working out this formula...this gives us a range of -1 to 1
+  //-- instance vars we are looking at:
+  //-- numQValues: how many samples, will be 1-1500
+  //--
+   float addVolatility(float oldQ, float newQ ) {
+     if( numQValues < 3 )
+       return 0;
+      
+      float diff = abs(oldQ-newQ);
+        
+      if( diff > topFilter )
+        diff = topFilter;
+      
+      float multiplier = 2.0;
+       if( numQValues > 1200 )
+        multiplier = 4.0;
+      if( numQValues > 750 )
+        multiplier = 3.0;
+        
+      return (diff-bottomFilter) * multiplier;
+   }
+   
   float getAlpha() {
     return qAlpha;
   }
@@ -178,22 +224,32 @@ class MuseHeadset {
       return retValue;
    }
    
-   void nextPlotValue() {
-      if( bRandomTasteIndex && touchingForehead == 1) {
+   private float randomizePlotValue() {
+     println( "RANDOM MODE -- randomizePlotValue()");
+     /// if( bRandomMode && touchingForehead == 1) {
         float randRange = 3.0;
-        plotValue = plotValue + random(-randRange,randRange);
-        if( plotValue < 0 )
-          plotValue = plotValue + random(-plotValue,randRange+.5);
-        else if( plotValue > 100 )
-          plotValue = plotValue - random((plotValue-100),randRange+.5);
-          
+        float oldQValue = combinedQValue;
+        combinedQValue = combinedQValue + random(-randRange,randRange);
+        if( combinedQValue < 0 )
+          combinedQValue = combinedQValue + random(-combinedQValue,randRange+.5);
+        else if( combinedQValue > 100 )
+          combinedQValue = combinedQValue - random((combinedQValue-100),randRange+.5);
+         /* 
         tasteIndex = tasteIndex + random(-1,1);
         if( tasteIndex < 0 )
           tasteIndex = 0;
         else if( tasteIndex > 100 )
           tasteIndex = 100;
+          */
+          
+          // println( "OLD TASTE INDEX: " + str(tasteIndex) );
+          tasteIndex += addVolatility(oldQValue,combinedQValue);
+          tasteIndex = checkMaxMin(tasteIndex,3.0);
+           //println( "NEW TASTE INDEX: " + str(tasteIndex) );
+           
+          return combinedQValue;
       }
-   }
+   ///}
              
   void zeroQWaveValues() {
       //-- set to reasonable defaults for these

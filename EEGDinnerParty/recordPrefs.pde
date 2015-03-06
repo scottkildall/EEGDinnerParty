@@ -20,5 +20,7 @@ public class RecordPrefs {
   float pctTheta;
   String saveData;
   String savePath;  // if none or empty, save to local
+  float tasteIndexTopFilter;
+  float tasteIndexBottomFilter;
 }
 

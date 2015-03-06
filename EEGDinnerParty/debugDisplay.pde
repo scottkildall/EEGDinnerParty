@@ -62,6 +62,11 @@ class DebugDisplay {
       float totalPct = prefs.pctAlpha + prefs.pctBeta + prefs.pctDelta + prefs.pctGamma + prefs.pctTheta;
      text( "Total Pct: " + String.format("%.0f",totalPct * 100) + "%", waveX, waveY );
      
+     waveX = 100;
+     text( "Taste Index Top Filter: " + String.format("%.2f",prefs.tasteIndexTopFilter), waveX, waveY+40 );
+     text( "Taste Index Bottom Filter: " + String.format("%.2f",prefs.tasteIndexBottomFilter), waveX + (2*waveXOffset), waveY+40 );
+    
+     
   }
 }
   

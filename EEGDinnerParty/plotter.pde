@@ -321,7 +321,7 @@ class Plotter {
          for( int i = 0; i < numHeadsets; i++ ) {
              plotData[i][numPlottedPixels] = headsets[i].getPlotValue() * vPlotMultiplier;
              touchingForehead[i][numPlottedPixels] = headsets[i].isTouchingForehead();
-             headsets[i].nextPlotValue(); 
+             ///headsets[i].nextPlotValue(); 
           }
           
          // prevent overflow, in case plot pixels exceeds buffer
