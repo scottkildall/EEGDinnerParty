@@ -190,13 +190,15 @@ class DebugHeadsetDisplay {
      noStroke();
      textSize(14);
      
-     long packetConnectionTime = 10000;  // how much time before we deem a device is disconnected
+     long packetConnectionTime = 5000;  // how much time before we deem a device is disconnected
      
      String connectedStr = "Connected: ";
-     if( headset.lastPacketMS + packetConnectionTime > millis() )
+     if( headset.lastPacketMS + packetConnectionTime > millis() ) {
       connectedStr = connectedStr + "YES";
-     else
+    }
+     else {
        connectedStr = connectedStr + "NO";
+    }
        
      String touchingStr = "Touching Forehead: ";
      if( headset.isTouchingForehead() )

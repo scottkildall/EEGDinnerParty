@@ -20,6 +20,8 @@ class Plotter {
   Timer plotTimer;    // this should be the duration of the dinner party
   Timer pixelTimer;    // this will get called for every pixel that we plot
   Timer saveDataTimer;    // for JSON data output
+  Timer allDoneTimer;  // for displaying an "ALL DONE" message
+  Boolean bDisplayAllDone;
   
   float drawX;
   float drawY;
@@ -41,6 +43,7 @@ class Plotter {
 
   PFont axesTextFont;
   PFont axesNumbersFont;
+  PFont allDoneFont;
   
   //-- alloc this
   float [][] plotData;
@@ -79,9 +82,13 @@ class Plotter {
       numPlottedPixels = 0;
       plotTimer = null;
       
+       allDoneTimer = new Timer(5000);  // for displaying an "ALL DONE" message
+       bDisplayAllDone = false;
+  
       //-- fonts for drawing
       axesTextFont = createFont("Arial", 28.3 );  
       axesNumbersFont = createFont("Arial", 14 );  //-- XXX: this needs to be updated
+      allDoneFont = createFont("Arial", 32 );
   }
   
   //-- must be called before start(), we pack the initialization code here, mostly for legibility
@@ -197,7 +204,7 @@ class Plotter {
       saveDataTimer.start();
     }
     
-
+    bDisplayAllDone = false;
     bRunning = true;
   }  
   
@@ -205,9 +212,14 @@ class Plotter {
       bRunning = false;
       if( bSaveData ) {
         copySaveDataBuffers();
-        printSavedData(); 
+        //printSavedData(); 
+        
         writeSavedData();
+        println( "DONE WRITING DATA");
       }     
+      
+      bDisplayAllDone = true;
+      allDoneTimer.start(); 
   }
   
   void clear() {
@@ -223,6 +235,7 @@ class Plotter {
     drawAxes();
     drawLabels();
     updatePlot();
+    updateAllDone();
   }
   
   private void drawLabels() { 
@@ -286,23 +299,29 @@ class Plotter {
         }
         lastX = x;
         lastY = y;
-     }
-     
+     } 
+  }
+  
+  private void updateAllDone() {
+    if( bRunning == false && bDisplayAllDone == true ) {
+      textAlign(CENTER);
+      textFont(allDoneFont);
+      fill( 132, 18, 37);
+      text( "All Done!", width/2,170 );
+      if( allDoneTimer.expired() )
+        bDisplayAllDone = false; 
+    }
   }
   
    private void updatePlot() {
      if( bRunning ) {
        if( pixelTimer.expired()) {
-         
-         //lastMillis = millis();
-
          pixelTimer.start();
          
          for( int i = 0; i < numHeadsets; i++ ) {
              plotData[i][numPlottedPixels] = headsets[i].getPlotValue() * vPlotMultiplier;
              touchingForehead[i][numPlottedPixels] = headsets[i].isTouchingForehead();
              headsets[i].nextPlotValue(); 
-             
           }
           
          // prevent overflow, in case plot pixels exceeds buffer
@@ -381,21 +400,6 @@ public void copySaveDataBuffers() {
       
       headsetIndex = headsetIndex + 1;
   }
-  
-  /*
-  // Allocate
-  outputDataSamples = new DataSample[numHeadsets][numSavedDataSamples];
-  for( int i = 0; i < numHeadsets; i++ ) {
-        for( int j = 0; j < numSavedDataSamples; j++ )
-           outputDataSamples[i][j] = new DataSample();
-   }
-  
-  // Copy
-  for( int i = 0; i < numHeadsets; i++ ) {
-        for( int j = 0; j < numSavedDataSamples; j++ )
-           outputDataSamples[i][j] = dataSamples[i][j];
-   }
-   */
 }
 
 private void saveDataSample(int index) { 
@@ -406,16 +410,7 @@ private void saveDataSample(int index) {
    return;
   }
     
-  println( "Saving Data Sample at index: " + str(index) );
-  for( int i = 0; i < numHeadsets; i++ ) {
-    // this works
-    /*
-    if( headsetsOn[i] )
-      println( "HEADSET ON: " + str(i) );
-    else
-      println( "HEADSET OFF: " + str(i) );
-    */
-    
+  for( int i = 0; i < numHeadsets; i++ ) { 
     if( headsetsOn[i] ) {
        dataSamples[i][index].ms = (index+1) * saveDataTimerDuration;
        dataSamples[i][index].alpha = headsets[i].getAlpha();

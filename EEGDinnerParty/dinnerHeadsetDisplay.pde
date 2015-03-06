@@ -54,11 +54,10 @@ class DinnerHeadsetDisplay {
   
   //-- draw 
   public void draw(MuseHeadset headset) {
-    //if(headset.isTouchingForehead() ) {
-      drawGraph();
-      drawTasteIndex();
-      drawTasteIndexLabels();
-   // }
+    drawGraph();
+    drawTasteIndex();
+    drawTasteIndexLabels();
+    checkConnection();
   }
   
   
@@ -111,5 +110,17 @@ class DinnerHeadsetDisplay {
     noFill();
     stroke(r,g,b);
     strokeWeight(2);
+  }
+  
+  private void checkConnection() {
+     long packetConnectionTime = 3000;  // how much time before we deem a device is disconnected
+     
+     String connectedStr = "Connected: ";
+     if( headset.lastPacketMS + packetConnectionTime > millis() ) {
+      headset.setConnected(true);
+    }
+     else {
+        headset.setConnected(false);
+    } 
   }
 }

@@ -53,6 +53,7 @@ class MuseHeadset {
   float combinedQValue;
   long lastPacketMS = 0;
   String headsetName;  // used for data output
+  Boolean connected = true;
   
   MuseHeadset(int thePort, String _headsetName) {
     port = thePort;
@@ -73,14 +74,7 @@ class MuseHeadset {
     
     zeroQWaveValues();
     
-    ///XXX: remove lastPacketTime = millis();
-    
-    ///XXX: clean
-    //if( thePort == 5007 )
-      bRandomMode = false;
-    //else
-     // bRandomMode = true;
-     
+    bRandomMode = false; 
      bRandomTasteIndex = true;
     resetData();
     lastPacketMS = millis();
@@ -88,6 +82,13 @@ class MuseHeadset {
   
   String getHeadsetName() {
     return headsetName;
+  }
+  
+  void setConnected(Boolean _connected) {
+    connected = _connected;
+    String s = "TRUE";
+    if(connected == false)
+      s = "FALSE";
   }
   
   void setPctWaves(float _pctAlpha, float _pctBeta, float _pctDelta, float _pctGamma, float _pctTheta) {
@@ -119,6 +120,10 @@ class MuseHeadset {
   }
   
   float getPlotValue() {
+    if( connected == false && touchingForehead == 1 ) {
+       bRandomMode = true;
+    }
+      
     if( bRandomMode )
        return plotValue;
      else {
@@ -209,6 +214,7 @@ class MuseHeadset {
     float goodDivisor = 7;
     float okDivisor = 3;
     float badDivisor = 1;
+       
     
     for( int i = 0; i < 4; i++ ) {
       

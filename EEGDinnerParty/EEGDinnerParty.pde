@@ -83,8 +83,16 @@ void keyPressed() {
   if( key == 'r' || key == 'R' )
     reloadPrefs();
     
-  if( key == ' ' )
-      dinnerDisplay.startPlot();
+  if( key == ' ' ) {
+     if( bDebugDisplay == false ) {
+        for( int i = 0; i < numDevices; i++ ) {
+          if( headsets[i].isTouchingForehead() == true ) {
+               dinnerDisplay.startPlot();
+               break;
+          }
+        }
+     }
+  }
 }
 
 void reloadPrefs() {
